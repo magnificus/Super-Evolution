@@ -9,10 +9,13 @@ type Env = Map Char Double
 
 
 -- A Translation unit contains the next step (two chars), the single node expression, and the binary node expression
-data TranslationUnit = Pair (Char, Char) Expr Expr 
+data TranslationUnit a b c = TranslationUnit {childrenNodes :: a, singleNode :: b, binaryNode :: c } deriving (Show)
 
 
-translationUnits = M.fromList [('f', (('f','g'), Lit, Add))]
+--translationUnits :: M.Map Char TranslationUnit
+translationUnits = M.fromList [('f', TranslationUnit ('f','g') (Lit 1) (Add))]
+
+variableValues = M.fromList [('x', 1.0), ('y', 0.0)]
 
 data Expr
     = Lit Double        -- Literal numbers
@@ -60,29 +63,37 @@ randomLit, randomVar :: IO Expr
 randomLit = Lit <$> randomRIO (-100, 100)
 randomVar = Var <$> randomRIO ('x',  'z')
 
-generateExpr :: Int -> IO Expr
--- When the depth is 1, return a literal or a variable randomly
-generateExpr 1 = do
-    isLit <- randomIO
-    if isLit
-        then randomLit
-        else randomVar
+--
+--
+--
+
+--generateExpr :: TranslationUnit -> Int -> Expr
+generateExpr t 1 = singleNode t
+
+generateExpr t n = generateExpr t (n-1)
+    
+--generateExpr :: Int -> TranslationUnit -> IO Expr
+--generateExpr t 1 = do
+--    isLit <- randomIO
+--    if isLit
+--        then randomLit
+--        else randomVar
 -- Otherwise, generate a tree using helper
-generateExpr n = randomRIO (0, 100) >>= helper
-    where
-        helper :: Int -> IO Expr
-        helper prob
-            -- 20% chance that it's a literal
-            | prob < 20  = randomLit
-            -- 10% chance that it's a variable
-            | prob < 30  = randomVar
-            -- 15% chance of Add
-            | prob < 45  = (+) <$> generateExpr (n - 1) <*> generateExpr (n - 1)
-            -- 15% chance of Sub
-            | prob < 60  = (-) <$> generateExpr (n - 1) <*> generateExpr (n - 1)
-            -- 15% chance of Mul
-            | prob < 75  = (*) <$> generateExpr (n - 1) <*> generateExpr (n - 1)
-            -- 15% chance of Div
-            | prob < 90  = (/) <$> generateExpr (n - 1) <*> generateExpr (n - 1)
-            -- 10% chance that we generate a possibly taller tree
-            | otherwise = generateExpr (n + 1)
+--generateExpr t n = randomRIO (0, 100) >>= helper
+--    where
+--        helper :: Int -> IO Expr
+--        helper prob
+--            -- 20% chance that it's a literal
+--            | prob < 20  = randomLit
+--            -- 10% chance that it's a variable
+--            | prob < 30  = randomVar
+--            -- 15% chance of Add
+--            | prob < 45  = (+) <$> generateExpr (n - 1) <*> generateExpr (n - 1)
+--            -- 15% chance of Sub
+--            | prob < 60  = (-) <$> generateExpr (n - 1) <*> generateExpr (n - 1)
+--            -- 15% chance of Mul
+--            | prob < 75  = (*) <$> generateExpr (n - 1) <*> generateExpr (n - 1)
+--            -- 15% chance of Div
+--            | prob < 90  = (/) <$> generateExpr (n - 1) <*> generateExpr (n - 1)
+--            -- 10% chance that we generate a possibly taller tree
+--            | otherwise = generateExpr (n + 1)
