@@ -4,18 +4,23 @@ import Control.Applicative
 import System.Random
 import Data.Map (Map)
 import qualified Data.Map as M
+import qualified Data.Maybe
 
 type Env = Map Char Double
 
 
 -- A Translation unit contains the next step (two chars), the single node expression, and the binary node expression
-data TranslationUnit a b c = TranslationUnit {childrenNodes :: a, singleNode :: b, binaryNode :: c } deriving (Show)
+data TranslationUnit = TranslationUnit {childrenNodes :: (Char, Char), singleNode :: Expr, binaryNode :: Expr } deriving (Show)
+
+createTU a b c = TranslationUnit{childrenNodes = a, singleNode = b, binaryNode = c}
 
 
 --translationUnits :: M.Map Char TranslationUnit
-translationUnits = M.fromList [('f', TranslationUnit ('f','g') (Lit 1) (Add))]
+translationUnits = M.fromList [('f', createTU ('f','g') (Lit 1) Add)]
+--variableValues = M.fromList [('x', 1.0), ('y', 0.0)]
 
-variableValues = M.fromList [('x', 1.0), ('y', 0.0)]
+--findNext c = Data.Maybe.fromMaybe (TranslationUnit, t) (M.lookup f translationUnits)
+--finCurrent c = fromMaybe TranslationUnit 
 
 data Expr
     = Lit Double        -- Literal numbers
