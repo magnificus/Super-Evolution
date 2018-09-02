@@ -3,8 +3,6 @@ import Data.Map
 
 type Env = Map Char Double
 
---translationMap = 
--- A Translation unit contains the next step (two chars), the single node expression, and the binary node expression
 
 defaultMap = fromList [('x', 1.0), ('y', 2.0)]
 defaultTree = (Node Sub (Node Add (Leaf (Var 'x')) (Leaf (Lit 2))) (Leaf (Var 'y')))
@@ -38,16 +36,26 @@ instance Show Tree where
     show (Leaf (Var x)) = show x
     show (Node f t1 t2) = (show t1) ++ " " ++ (show f) ++ " " ++ (show t2)
 
+instance Show Leaf where
+   show (Lit a) = show a
+   show (Var a) = [a]
 
-data TranslationUnit = TranslationUnit {childrenNodes :: (TranslationUnit, TranslationUnit), singleNode :: Leaf, function :: Func }
+-- A Translation unit contains the next step (two chars), the single node expression, and the binary node expression
+data TranslationUnit = TranslationUnit {childrenNodes :: (Char, Char), singleNode :: Leaf, function :: Func } deriving (Show)
 
-defaultTU1 = TranslationUnit (defaultTU2, defaultTU1) (Lit 1) Add
-defaultTU2 = TranslationUnit (defaultTU1, defaultTU3) (Var 'x') Sub 
-defaultTU3 = TranslationUnit (defaultTU1, defaultTU2) (Lit 3) Mul 
+defaultTU1 = TranslationUnit ('f', 'x') (Lit 1) Add
+defaultTU2 = TranslationUnit ('x', 'w') (Var 'x') Sub 
+defaultTU3 = TranslationUnit ('w', 'f') (Lit 3) Mul 
 
+treeMap = fromList [('f', defaultTU1), ('x', defaultTU2), ('w', defaultTU3)]
 
+charToTree = (!) treeMap
 
 toTree :: TranslationUnit -> Integer -> Tree
 toTree t n
-   | n > 1 = Node (function t)  (toTree (fst $ childrenNodes t) (n-1)) (toTree (snd $ childrenNodes t) (n-1))
+   | n > 1 = Node (function t)  (toTree (charToTree . fst $ childrenNodes t) (n-1)) (toTree  (charToTree . snd $ childrenNodes t) (n-1))
    | otherwise =  Leaf (singleNode t)
+
+
+
+getTUChar = (!!) (keys treeMap)
