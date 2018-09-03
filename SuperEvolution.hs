@@ -1,8 +1,7 @@
 module SuperEvolution where
 import Data.Map
-
+import System.Random
 type Env = Map Char Double
-
 
 defaultMap = fromList [('x', 1.0), ('y', 2.0)]
 defaultTree = (Node Sub (Node Add (Leaf (Var 'x')) (Leaf (Lit 2))) (Leaf (Var 'y')))
@@ -56,6 +55,13 @@ toTree t n
    | n > 1 = Node (function t)  (toTree (charToTree . fst $ childrenNodes t) (n-1)) (toTree  (charToTree . snd $ childrenNodes t) (n-1))
    | otherwise =  Leaf (singleNode t)
 
-
-
 getTUChar = (!!) (keys treeMap)
+
+mutateNode n = do
+  g <- newStdGen
+  let (x,g) = randomR (1.0::Float,6.0::Float) g
+  return g
+  --randomR (1,6) g
+ -- return 1
+  --rs <- randomList (n-1)
+  --return (r:rs) 
