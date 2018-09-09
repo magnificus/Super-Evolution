@@ -5,6 +5,9 @@ type Env = Map Char Double
 
 mutateChildChance = 0.1
 mutateLeafChance = 0.1
+mutateFuncChance = 0.1
+
+numTrees = 10
 
 defaultMap = fromList [('x', 1.0), ('y', 2.0)]
 defaultTree = (Node Sub (Node Add (Leaf (Var 'x')) (Leaf (Lit 2))) (Leaf (Var 'y')))
@@ -59,19 +62,31 @@ toTree t n
    | n > 1 = Node (function t)  (toTree (charToTree . fst $ childrenNodes t) (n-1)) (toTree  (charToTree . snd $ childrenNodes t) (n-1))
    | otherwise =  Leaf (singleNode t)
 
+getPositionInList f l = l !! (floor $ f* (fromIntegral $ length l))
+
 getTUChar :: Double -> Char
-getTUChar f = (!!) (keys treeMap) (floor $ f* (fromIntegral $ size treeMap))
+getTUChar f = getPositionInList f $ keys treeMap
 
 getLeaf :: Double -> Double -> Leaf
 getLeaf f1 f2 = if (f1 < 0.5) then (Lit f2) else (Var (getTUChar f2))
 
+getFunction f = getPositionInList f availableFunctions
+
 getMutatedChildren (c1,c2) f1 f2 f3 f4 = (maybeChange c1 f1 f2, maybeChange c2 f3 f4)
    where maybeChange c f1 f2 = if (f1 < mutateChildChance) then getTUChar f2 else c
 
-getMutatedLeaf l f1 f2 = if (f1 < mutateLeafChance) then getLeaf f2 else l
+getMutatedLeaf l f1 f2 f3 = if (f1 < mutateLeafChance) then getLeaf f2 f3 else l
+
+getMutatedFunction f f1 f2 = if (f1 < mutateFuncChance) then getFunction f2 else f
+
+
+--randomNode = do
+--  let newChildren = (getTUChar
 
 mutateNode n = do
   let newChildren = getMutatedChildren (childrenNodes n) <$> randDouble <*> randDouble <*> randDouble <*> randDouble
-  let newLeaf = getMutatedLeaf 
-  newChildren
-  where randDouble = randomRIO (0.0::Double,0.9999::Double)
+  let newLeaf = getMutatedLeaf (singleNode n) <$> randDouble <*> randDouble <*> randDouble
+  let newFunc = getMutatedFunction (function n) <$> randDouble <*> randDouble
+  TranslationUnit <$> newChildren <*> newLeaf <*> newFunc
+ 
+randDouble = randomRIO (0.0::Double,0.9999::Double)
