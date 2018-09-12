@@ -79,9 +79,14 @@ getMutatedLeaf l f1 f2 f3 = if (f1 < mutateLeafChance) then getLeaf f2 f3 else l
 
 getMutatedFunction f f1 f2 = if (f1 < mutateFuncChance) then getFunction f2 else f
 
+getRandomNode = do
+  randomNode <$> randDouble <*> randDouble <*> randDouble <*> randDouble <*> randDouble
 
---randomNode = do
---  let newChildren = (getTUChar
+randomNode f1 f2 f3 f4 f5 = do
+  let newChildren = (getTUChar f1, getTUChar f2)
+  let newLeaf = getLeaf f3 f4
+  let newFunc = getFunction f5
+  TranslationUnit newChildren newLeaf newFunc
 
 mutateNode n = do
   let newChildren = getMutatedChildren (childrenNodes n) <$> randDouble <*> randDouble <*> randDouble <*> randDouble
@@ -90,3 +95,12 @@ mutateNode n = do
   TranslationUnit <$> newChildren <*> newLeaf <*> newFunc
  
 randDouble = randomRIO (0.0::Double,0.9999::Double)
+
+calcTreeValue t e = (calculate (toTree t 4) e)
+
+--calculateTreeFitness t e l = 
+
+main = do
+  trees <- sequence $ Prelude.take numTrees $ repeat getRandomNode -- these are the first generation trees
+  newNodes <- sequence $ Prelude.map mutateNode trees
+  return newNodes 
