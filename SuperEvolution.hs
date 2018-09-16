@@ -1,7 +1,9 @@
 module SuperEvolution where
 import Data.Map
 import System.Random
-type Env = Map Char Double
+
+type Env = Map Char Double -- An environment is defined as a map of chars (variables) and their corresponding values
+data Solution = Solution {environment :: Env, value :: Double} -- this type corresponds to an environment together with the ideal ouput result
 
 mutateChildChance = 0.1
 mutateLeafChance = 0.1
@@ -9,7 +11,10 @@ mutateFuncChance = 0.1
 
 numTrees = 10
 
-defaultMap = fromList [('x', 1.0), ('y', 2.0)]
+treeDepth = 4
+
+defaultEnv :: Env
+defaultEnv = fromList [('x', 1.0), ('y', 2.0)]
 defaultTree = (Node Sub (Node Add (Leaf (Var 'x')) (Leaf (Lit 2))) (Leaf (Var 'y')))
 
 data Tree = EmptyTree | Node Func Tree Tree | Leaf Leaf
@@ -51,6 +56,9 @@ data TranslationUnit = TranslationUnit {childrenNodes :: (Char, Char), singleNod
 defaultTU1 = TranslationUnit ('f', 'x') (Lit 1) Add
 defaultTU2 = TranslationUnit ('x', 'w') (Var 'x') Sub 
 defaultTU3 = TranslationUnit ('w', 'f') (Lit 3) Mul 
+
+defaultSolution :: Solution
+defaultSolution = Solution defaultEnv (calculate (toTree defaultTU1 treeDepth) defaultEnv)
 
 treeMap = fromList [('f', defaultTU1), ('x', defaultTU2), ('w', defaultTU3)]
 availableFunctions = [Add,Sub,Mul]
@@ -96,11 +104,14 @@ mutateNode n = do
  
 randDouble = randomRIO (0.0::Double,0.9999::Double)
 
-calcTreeValue t e = (calculate (toTree t 4) e)
+calcTreeValue :: TranslationUnit -> Env -> Double
+calcTreeValue t e = (calculate (toTree t treeDepth) e)
 
---calculateTreeFitness t e l = 
+calculateTreeFitness :: TranslationUnit -> [Solution] -> Double
+calculateTreeFitness t s = Prelude.foldl (\a b -> a + (diff t b)**2) 0 s
+  where diff t sol = (value sol) - calcTreeValue t (environment sol)
+
 
 main = do
   trees <- sequence $ Prelude.take numTrees $ repeat getRandomNode -- these are the first generation trees
-  newNodes <- sequence $ Prelude.map mutateNode trees
-  return newNodes 
+  return trees 
