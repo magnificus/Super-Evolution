@@ -1,25 +1,13 @@
 module SuperEvolution where
-import Data.Map
+
 import System.Random
+import Data.Map
+import Data.List
+import Data.Ord
+import Control.Monad
 
-type Env = Map Char Double -- An environment is defined as a map of chars (variables) and their corresponding values
-data Solution = Solution {environment :: Env, value :: Double} -- this type corresponds to an environment together with the ideal ouput result
-
-mutateChildChance = 0.1
-mutateLeafChance = 0.1
-mutateFuncChance = 0.1
-
-numTrees = 10
-
-treeDepth = 4
-
-defaultEnv :: Env
-defaultEnv = fromList [('x', 1.0), ('y', 2.0)]
-defaultTree = (Node Sub (Node Add (Leaf (Var 'x')) (Leaf (Lit 2))) (Leaf (Var 'y')))
-
-data Tree = EmptyTree | Node Func Tree Tree | Leaf Leaf
-data Func = Add | Sub | Mul
-data Leaf = Lit Double | Var Char
+import EvolutionTypes
+import EvolutionConfig
 
 calculate :: Tree -> Env -> Double
 calculate EmptyTree _ = 0
@@ -35,53 +23,30 @@ calcFunc Add t1 t2 = t1 + t2
 calcFunc Sub t1 t2 = t1 - t2
 calcFunc Mul t1 t2 = t1 * t2
 
-instance Show Func where
-   show Add = "+"
-   show Sub = "-"
-   show Mul = "*"
+defaultTU1 = TranslationUnit ('a', 'a') (Lit 1) Add
 
-instance Show Tree where
-    show EmptyTree = ""
-    show (Leaf (Lit x)) = show x
-    show (Leaf (Var x)) = show x
-    show (Node f t1 t2) = (show t1) ++ " " ++ (show f) ++ " " ++ (show t2)
+--defaultSolution :: Solution
+--defaultSolution = Solution defaultEnv (calculate (toTree defaultTU1 defaultAlternative treeDepth) defaultEnv)
 
-instance Show Leaf where
-   show (Lit a) = show a
-   show (Var a) = [a]
+defaultAlternative = fromList [('a', defaultTU1), ('b', defaultTU1), ('c', defaultTU1)]
 
--- A Translation unit contains the next step (two chars), the single node expression, and the binary node expression
-data TranslationUnit = TranslationUnit {childrenNodes :: (Char, Char), singleNode :: Leaf, function :: Func } deriving (Show)
-
-defaultTU1 = TranslationUnit ('f', 'x') (Lit 1) Add
-defaultTU2 = TranslationUnit ('x', 'w') (Var 'x') Sub 
-defaultTU3 = TranslationUnit ('w', 'f') (Lit 3) Mul 
-
-defaultSolution :: Solution
-defaultSolution = Solution defaultEnv (calculate (toTree defaultTU1 treeDepth) defaultEnv)
-
-treeMap = fromList [('f', defaultTU1), ('x', defaultTU2), ('w', defaultTU3)]
-availableFunctions = [Add,Sub,Mul]
-
-charToTree = (!) treeMap
-
-toTree :: TranslationUnit -> Integer -> Tree
-toTree t n
-   | n > 1 = Node (function t)  (toTree (charToTree . fst $ childrenNodes t) (n-1)) (toTree  (charToTree . snd $ childrenNodes t) (n-1))
+toTree :: TranslationUnit -> Alternative -> Integer -> Tree
+toTree t a n
+   | n > 1 = Node (function t) (toTree ((!) a . fst $ childrenNodes t) a (n-1)) (toTree  ((!) a . snd $ childrenNodes t) a (n-1))
    | otherwise =  Leaf (singleNode t)
 
 getPositionInList f l = l !! (floor $ f* (fromIntegral $ length l))
 
-getTUChar :: Double -> Char
-getTUChar f = getPositionInList f $ keys treeMap
+getTUChar :: Double -> String -> Char
+getTUChar f s = getPositionInList f $ s
 
 getLeaf :: Double -> Double -> Leaf
-getLeaf f1 f2 = if (f1 < 0.5) then (Lit f2) else (Var (getTUChar f2))
+getLeaf f1 f2 = if (f1 < 0.5) then (Lit f2) else (Var (getTUChar f2 charsSol))
 
 getFunction f = getPositionInList f availableFunctions
 
 getMutatedChildren (c1,c2) f1 f2 f3 f4 = (maybeChange c1 f1 f2, maybeChange c2 f3 f4)
-   where maybeChange c f1 f2 = if (f1 < mutateChildChance) then getTUChar f2 else c
+   where maybeChange c f1 f2 = if (f1 < mutateChildChance) then getTUChar f2 charsTU else c
 
 getMutatedLeaf l f1 f2 f3 = if (f1 < mutateLeafChance) then getLeaf f2 f3 else l
 
@@ -91,7 +56,7 @@ getRandomNode = do
   randomNode <$> randDouble <*> randDouble <*> randDouble <*> randDouble <*> randDouble
 
 randomNode f1 f2 f3 f4 f5 = do
-  let newChildren = (getTUChar f1, getTUChar f2)
+  let newChildren = (getTUChar f1 charsTU, getTUChar f2 charsTU)
   let newLeaf = getLeaf f3 f4
   let newFunc = getFunction f5
   TranslationUnit newChildren newLeaf newFunc
@@ -104,14 +69,27 @@ mutateNode n = do
  
 randDouble = randomRIO (0.0::Double,0.9999::Double)
 
-calcTreeValue :: TranslationUnit -> Env -> Double
-calcTreeValue t e = (calculate (toTree t treeDepth) e)
+calcTreeValue :: Env -> Alternative -> TranslationUnit -> Double
+calcTreeValue e a t = (calculate (toTree t a treeDepth) e)
 
-calculateTreeFitness :: TranslationUnit -> [Solution] -> Double
-calculateTreeFitness t s = Prelude.foldl (\a b -> a + (diff t b)**2) 0 s
-  where diff t sol = (value sol) - calcTreeValue t (environment sol)
+-- lower is better, our top Node is the one c 
+calculateTreeFitness :: [Solution] -> Alternative -> Double
+calculateTreeFitness s a = Prelude.foldl (\a b -> a + (diff s b)**2) 0 s
+  where diff s sol = (value sol) - calcTreeValue (environment sol) a (alternativeTop a)
 
+
+defaultSolutions = Prelude.map (\a -> Solution (fromList [('x', a)]) $ a^2) [1.0..100.0] 
+
+exportIO (a, b) = do { b2 <- b; return (a,b2) }
 
 main = do
-  trees <- sequence $ Prelude.take numTrees $ repeat getRandomNode -- these are the first generation trees
-  return trees 
+  let alternative = liftM fromList $ sequence $ Data.List.map exportIO $ zip charsTU (repeat $ getRandomNode) -- gets one random alternative
+  alternatives <- sequence $ Data.List.take numAlternatives $ repeat $ alternative -- gets several random alternatives
+  let sorted = sortBy (comparing (calculateTreeFitness defaultSolutions)) alternatives
+  
+  return (sorted !! 0)
+  --return sorted
+  --return alternatives
+  --trees <- sequence $ Prelude.take aumTrees $ repeat getRandomNode -- these are the first generation trees
+  --let sorted = sortBy (comparing (calculateTreeFitness defaultSolutions)) trees
+  --return sorted
