@@ -11,7 +11,7 @@ mutateFuncChance = 0.1
 
 charsSol = ['x']
 charsTU = ['a', 'b', 'c']--, 'd', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm']
-numAlternatives = 3 :: Int
+numAlternatives = 1000 :: Int
 treeDepth = 4
 
 --defaultEnv :: Env

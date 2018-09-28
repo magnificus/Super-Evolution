@@ -35,6 +35,9 @@ toTree t a n
    | n > 1 = Node (function t) (toTree ((!) a . fst $ childrenNodes t) a (n-1)) (toTree  ((!) a . snd $ childrenNodes t) a (n-1))
    | otherwise =  Leaf (singleNode t)
 
+altToTree :: Alternative -> Tree
+altToTree a = toTree (alternativeTop a) a treeDepth
+
 getPositionInList f l = l !! (floor $ f* (fromIntegral $ length l))
 
 getTUChar :: Double -> String -> Char
@@ -86,8 +89,9 @@ main = do
   let alternative = liftM fromList $ sequence $ Data.List.map exportIO $ zip charsTU (repeat $ getRandomNode) -- gets one random alternative
   alternatives <- sequence $ Data.List.take numAlternatives $ repeat $ alternative -- gets several random alternatives
   let sorted = sortBy (comparing (calculateTreeFitness defaultSolutions)) alternatives
-  
-  return (sorted !! 0)
+  let topAlt =  sorted !! 0
+--  let topTree = toTree (alternativeTop topAlt)  topAlt treeDepth
+  return topAlt
   --return sorted
   --return alternatives
   --trees <- sequence $ Prelude.take aumTrees $ repeat getRandomNode -- these are the first generation trees

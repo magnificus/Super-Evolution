@@ -23,7 +23,7 @@ instance Show Tree where
     show EmptyTree = ""
     show (Leaf (Lit x)) = show x
     show (Leaf (Var x)) = show x
-    show (Node f t1 t2) = (show t1) ++ " " ++ (show f) ++ " " ++ (show t2)
+    show (Node f t1 t2) = "(" ++ (show t1) ++ " " ++ (show f) ++ " " ++ (show t2) ++ ")"
 
 instance Show Leaf where
    show (Lit a) = show a
