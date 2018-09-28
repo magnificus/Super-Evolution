@@ -73,13 +73,13 @@ mutateNode n = do
 randDouble = randomRIO (0.0::Double,0.9999::Double)
 randD = randomRs (0.0::Double, 0.9999::Double)
 
-calcTreeValue :: Env -> Alternative -> Double
-calcTreeValue e a = (calculate (altToTree a) e)
+calcAltValue :: Env -> Alternative -> Double
+calcAltValue e a = (calculate (altToTree a) e)
 
 -- lower is better
 calculateTreeFitness :: [Solution] -> Alternative -> Double
 calculateTreeFitness s a = Prelude.foldl (\a b -> a + (diff s b)**2) 0 s
-  where diff s sol = (value sol) - calcTreeValue (environment sol) a
+  where diff s sol = (value sol) - calcAltValue (environment sol) a
 
 
 defaultSolutions = Prelude.map (\a -> Solution (fromList [('x', a)]) $ a^2) [1.0..100.0] -- x ^ 2 is the solution
@@ -98,6 +98,11 @@ exportIO (a, b) = do { b2 <- b; return (a,b2) }
 
 randomList =  randD <$> newStdGen
 
+--gatherData al sol = do
+--  let generations = Data.List.take 10 (iterate getNextGeneration al) 
+--  let fitnessValues = Data.List.map ((\al ->  calculateTreeFitness sol al) . (flip (!!) 0)) generations
+--  return fitnessValues
+
 getNextGeneration :: IO [Alternative] -> IO [Alternative]
 getNextGeneration ioAlternatives = do
   alternatives <- ioAlternatives
@@ -110,7 +115,7 @@ getNextGeneration ioAlternatives = do
 main = do
   let alternative = liftM fromList $ sequence $ Data.List.map exportIO $ zip charsTU (repeat $ getRandomNode) -- gets one random alternative
   let alternatives = sequence $ Data.List.take numAlternatives $ repeat $ alternative -- gets several random alternatives
-  iterate getNextGeneration alternatives
+  getNextGeneration alternatives
    --return $ length nextGen
   --return (nextGen !! 0)
 --  let topAlt =  sorted !! 0
