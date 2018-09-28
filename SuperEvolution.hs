@@ -71,27 +71,51 @@ mutateNode n = do
   TranslationUnit <$> newChildren <*> newLeaf <*> newFunc
  
 randDouble = randomRIO (0.0::Double,0.9999::Double)
+randD = randomRs (0.0::Double, 0.9999::Double)
 
-calcTreeValue :: Env -> Alternative -> TranslationUnit -> Double
-calcTreeValue e a t = (calculate (toTree t a treeDepth) e)
+calcTreeValue :: Env -> Alternative -> Double
+calcTreeValue e a = (calculate (altToTree a) e)
 
--- lower is better, our top Node is the one c 
+-- lower is better
 calculateTreeFitness :: [Solution] -> Alternative -> Double
 calculateTreeFitness s a = Prelude.foldl (\a b -> a + (diff s b)**2) 0 s
-  where diff s sol = (value sol) - calcTreeValue (environment sol) a (alternativeTop a)
+  where diff s sol = (value sol) - calcTreeValue (environment sol) a
 
 
-defaultSolutions = Prelude.map (\a -> Solution (fromList [('x', a)]) $ a^2) [1.0..100.0] 
+defaultSolutions = Prelude.map (\a -> Solution (fromList [('x', a)]) $ a^2) [1.0..100.0] -- x ^ 2 is the solution
+
+
+cullAlternatives :: [Double] -> Double -> [Alternative] -> [Alternative]
+cullAlternatives ran r al = Data.List.foldr (\(i,a,rn) l -> if ((r * 2 * (fromIntegral i)) < (fromIntegral $ length al) * rn) then a:l else l) [] zipped
+  where zipped = zip3 [0..] al ran
+
+newAlternatives n a = sequence $ Data.List.take n (repeat $ getNewAlternativeFrom a)  
+
+getNewAlternativeFrom :: [Alternative] -> IO Alternative
+getNewAlternativeFrom a = do getPositionInList <$> randDouble <*> (return a)
 
 exportIO (a, b) = do { b2 <- b; return (a,b2) }
 
+randomList =  randD <$> newStdGen
+
+getNextGeneration :: IO [Alternative] -> IO [Alternative]
+getNextGeneration ioAlternatives = do
+  alternatives <- ioAlternatives
+  let sorted = sortBy (comparing (calculateTreeFitness defaultSolutions)) alternatives -- sort the alternatives for culling
+  currRandomList <- randomList
+  let nextGen = cullAlternatives currRandomList cullRatio sorted -- removed culled alternatives
+  nextGenFull <- (++) nextGen <$> newAlternatives (numAlternatives - (length nextGen)) nextGen  -- added new replacements
+  return nextGenFull
+
 main = do
   let alternative = liftM fromList $ sequence $ Data.List.map exportIO $ zip charsTU (repeat $ getRandomNode) -- gets one random alternative
-  alternatives <- sequence $ Data.List.take numAlternatives $ repeat $ alternative -- gets several random alternatives
-  let sorted = sortBy (comparing (calculateTreeFitness defaultSolutions)) alternatives
-  let topAlt =  sorted !! 0
+  let alternatives = sequence $ Data.List.take numAlternatives $ repeat $ alternative -- gets several random alternatives
+  iterate getNextGeneration alternatives
+   --return $ length nextGen
+  --return (nextGen !! 0)
+--  let topAlt =  sorted !! 0
 --  let topTree = toTree (alternativeTop topAlt)  topAlt treeDepth
-  return topAlt
+  --return topAlt
   --return sorted
   --return alternatives
   --trees <- sequence $ Prelude.take aumTrees $ repeat getRandomNode -- these are the first generation trees
