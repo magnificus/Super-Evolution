@@ -1,10 +1,11 @@
-module SuperEvolution where
+module Main where
 
 import System.Random
 import Data.Map
 import Data.List
 import Data.Ord
 import Control.Monad
+import Data.Maybe
 
 import EvolutionTypes
 import EvolutionConfig
@@ -25,9 +26,6 @@ calcFunc Mul t1 t2 = t1 * t2
 
 defaultTU1 = TranslationUnit ('a', 'a') (Lit 1) Add
 
---defaultSolution :: Solution
---defaultSolution = Solution defaultEnv (calculate (toTree defaultTU1 defaultAlternative treeDepth) defaultEnv)
-
 defaultAlternative = fromList [('a', defaultTU1), ('b', defaultTU1), ('c', defaultTU1)]
 
 toTree :: TranslationUnit -> Alternative -> Integer -> Tree
@@ -43,34 +41,36 @@ getPositionInList f l = l !! (floor $ f* (fromIntegral $ length l))
 getTUChar :: Double -> String -> Char
 getTUChar f s = getPositionInList f $ s
 
-getLeaf :: Double -> Double -> Leaf
-getLeaf f1 f2 = if (f1 < 0.5) then (Lit f2) else (Var (getTUChar f2 charsSol))
+getLeaf :: [Double] -> Leaf
+getLeaf r = if ((r !! 0) < 0.5) then (Lit (r !! 1)) else (Var (getTUChar (r !! 1) charsSol))
 
 getFunction f = getPositionInList f availableFunctions
 
-getMutatedChildren (c1,c2) f1 f2 f3 f4 = (maybeChange c1 f1 f2, maybeChange c2 f3 f4)
+getMutatedChildren (c1,c2) r = (maybeChange c1 (r !! 0) (r !! 1), maybeChange c2 (r !! 2) (r !! 3))
    where maybeChange c f1 f2 = if (f1 < mutateChildChance) then getTUChar f2 charsTU else c
 
-getMutatedLeaf l f1 f2 f3 = if (f1 < mutateLeafChance) then getLeaf f2 f3 else l
+getMutatedLeaf l r = if ((r !! 0) < mutateLeafChance) then getLeaf (tail r) else l
 
-getMutatedFunction f f1 f2 = if (f1 < mutateFuncChance) then getFunction f2 else f
+getMutatedFunction f r = if ((r !! 0) < mutateFuncChance) then getFunction (r !! 1) else f
 
-getRandomNode = do
-  randomNode <$> randDouble <*> randDouble <*> randDouble <*> randDouble <*> randDouble
+--getRandomNode = do
+  --randomNode <$> randDouble <*> randDouble <*> randDouble <*> randDouble <*> randDouble
 
-randomNode f1 f2 f3 f4 f5 = do
-  let newChildren = (getTUChar f1 charsTU, getTUChar f2 charsTU)
-  let newLeaf = getLeaf f3 f4
-  let newFunc = getFunction f5
-  TranslationUnit newChildren newLeaf newFunc
+randomNode r =
+  let newChildren = (getTUChar (r !! 0) charsTU, getTUChar (r !! 1) charsTU)
+      newLeaf = getLeaf $ (iterate tail r) !! 4
+      newFunc = getFunction (r !! 3) 
+  in  TranslationUnit newChildren newLeaf newFunc
 
-mutateNode n = do
-  let newChildren = getMutatedChildren (childrenNodes n) <$> randDouble <*> randDouble <*> randDouble <*> randDouble
-  let newLeaf = getMutatedLeaf (singleNode n) <$> randDouble <*> randDouble <*> randDouble
-  let newFunc = getMutatedFunction (function n) <$> randDouble <*> randDouble
-  TranslationUnit <$> newChildren <*> newLeaf <*> newFunc
+mutateNode g n =
+  let (childR, next) = System.Random.split g
+      (leafR, funcR) = System.Random.split next
+      newChildren = getMutatedChildren (childrenNodes n) $ randD childR
+      newLeaf = getMutatedLeaf (singleNode n) $ randD leafR
+      newFunc = getMutatedFunction (function n) $ randD funcR
+  in TranslationUnit newChildren newLeaf newFunc
  
-randDouble = randomRIO (0.0::Double,0.9999::Double)
+--randDouble = randomRIO (0.0::Double,0.9999::Double)
 randD = randomRs (0.0::Double, 0.9999::Double)
 
 calcAltValue :: Env -> Alternative -> Double
@@ -78,44 +78,64 @@ calcAltValue e a = (calculate (altToTree a) e)
 
 -- lower is better
 calculateTreeFitness :: [Solution] -> Alternative -> Double
-calculateTreeFitness s a = Prelude.foldl (\a b -> a + (diff s b)**2) 0 s
+calculateTreeFitness s a = Data.List.foldl' (\a b -> a + (diff s b)**2) 0 s
   where diff s sol = (value sol) - calcAltValue (environment sol) a
 
 
-defaultSolutions = Prelude.map (\a -> Solution (fromList [('x', a)]) $ a^2) [1.0..100.0] -- x ^ 2 is the solution
+createSolutions f = Prelude.map (\a -> Solution (fromList [('x', a)]) $ f a) [0.0..100.0] 
 
+defaultSolutions = createSolutions (\x -> x*x + x ) -- x ^ 2 + x  is the solution
 
 cullAlternatives :: [Double] -> Double -> [Alternative] -> [Alternative]
-cullAlternatives ran r al = Data.List.foldr (\(i,a,rn) l -> if ((r * 2 * (fromIntegral i)) < (fromIntegral $ length al) * rn) then a:l else l) [] zipped
+cullAlternatives ran r al = Data.List.map (\(_,a,_) -> a) $ Data.List.filter (\(i,a,rn) -> (r * 2.0 * (fromIntegral i)) <= ((fromIntegral $ length al) * rn)) zipped
   where zipped = zip3 [0..] al ran
 
-newAlternatives n a = sequence $ Data.List.take n (repeat $ getNewAlternativeFrom a)  
+newAlternatives n g a = Data.List.take n (repeat $ getNewAlternativeFrom a g)  
 
-getNewAlternativeFrom :: [Alternative] -> IO Alternative
-getNewAlternativeFrom a = do getPositionInList <$> randDouble <*> (return a)
+-- creates a new alternative based on the ones in a
+getNewAlternativeFrom :: [Alternative] -> StdGen -> Alternative
+getNewAlternativeFrom a g =
+  let (g1,g2) = System.Random.split g
+      cpAlternative = getPositionInList ((randD g1) !! 0) a
+  in Data.Map.map (mutateNode g2) cpAlternative
 
 exportIO (a, b) = do { b2 <- b; return (a,b2) }
 
 randomList =  randD <$> newStdGen
 
---gatherData al sol = do
---  let generations = Data.List.take 10 (iterate getNextGeneration al) 
---  let fitnessValues = Data.List.map ((\al ->  calculateTreeFitness sol al) . (flip (!!) 0)) generations
---  return fitnessValues
+sortAlternatives = sortBy (comparing (calculateTreeFitness defaultSolutions))
 
-getNextGeneration :: IO [Alternative] -> IO [Alternative]
-getNextGeneration ioAlternatives = do
-  alternatives <- ioAlternatives
-  let sorted = sortBy (comparing (calculateTreeFitness defaultSolutions)) alternatives -- sort the alternatives for culling
-  currRandomList <- randomList
-  let nextGen = cullAlternatives currRandomList cullRatio sorted -- removed culled alternatives
-  nextGenFull <- (++) nextGen <$> newAlternatives (numAlternatives - (length nextGen)) nextGen  -- added new replacements
-  return nextGenFull
+randomGenerators g = Data.List.unfoldr (\g1 -> Just $ System.Random.split g1) g
+
+nextGenG (al,g) = (getNextGeneration g al, snd (System.Random.split g))
+
+gatherData al sol g =
+  let generations = Data.List.map fst $ Data.List.take 100 (iterate nextGenG (al, g)) 
+      fitnessValues = Data.List.map (\a -> ((calculateTreeFitness sol) (a !! 0), altToTree (a !! 0))) generations
+  in fitnessValues
+
+--getNextGeneration :: [Alternative] -> [Alternative]
+getNextGeneration g alts =
+  let sorted = sortAlternatives alts -- sort the alternatives for culling
+      (g1,g2) = System.Random.split g
+      nextGen = cullAlternatives (randD g1) cullRatio sorted -- removed culled alternatives
+      newGen = newAlternatives (numAlternatives - (length nextGen)) g2 nextGen
+  in  nextGen ++ newGen 
+
+
+getRandomAlternative g = fromList $ zip charsTU (Data.List.map (randomNode . randD) (randomGenerators g))
+
+getRandomAlternatives n g = Data.List.take n $ (Data.List.map getRandomAlternative $ randomGenerators g)
+
 
 main = do
-  let alternative = liftM fromList $ sequence $ Data.List.map exportIO $ zip charsTU (repeat $ getRandomNode) -- gets one random alternative
-  let alternatives = sequence $ Data.List.take numAlternatives $ repeat $ alternative -- gets several random alternatives
-  getNextGeneration alternatives
+  g <- newStdGen
+  let (g1,g2) = System.Random.split g
+  let alternatives = getRandomAlternatives numAlternatives g1
+  let res = gatherData alternatives defaultSolutions g2
+  --print res
+  return res
+ 
    --return $ length nextGen
   --return (nextGen !! 0)
 --  let topAlt =  sorted !! 0
