@@ -95,16 +95,18 @@ cullAlternatives ran r al = Data.List.map (\(_,a,_) -> a) $ Data.List.filter (\(
 
 newAlternatives n g a = Data.List.take n $ Data.List.map (getNewAlternativeFrom a) $ randomGenerators g  
 
--- creates a new alternative based on the ones in a
+combineAlternatives :: Alternative -> Alternative -> [Double] -> Alternative
+combineAlternatives a1 a2 rands = fromList $ Data.List.map (\(r, c) -> (c, if (r < 0.5) then (a1 ! c) else (a2 ! c))) $ zip rands charsTU
+
 getNewAlternativeFrom :: [Alternative] -> StdGen -> Alternative
 getNewAlternativeFrom a g =
-  let (g1,g2) = System.Random.split g
-      cpAlternative = getPositionInList ((randD g1) !! 0) a
-  in Data.Map.map (mutateNode g2) cpAlternative
+  let randGs = randomGenerators g
+      rands = randD g
+      cpAlt d = getPositionInList d a
+      combinedAlternative = combineAlternatives (cpAlt (rands !! 0)) (cpAlt (rands !! 1)) (Data.List.drop 2 rands)
+  in Data.Map.map (mutateNode (randGs !! 1)) combinedAlternative
 
-exportIO (a, b) = do { b2 <- b; return (a,b2) }
-
-randomList =  randD <$> newStdGen
+--randomList = randD <$> newStdGen
 
 randInRange (a, b) f = (b-a)*f + a
 
@@ -130,11 +132,9 @@ getNextGeneration g alts =
       newGen = newAlternatives (numAlternatives - (length nextGen)) g2 nextGen
   in  nextGen ++ newGen 
 
-
 getRandomAlternative g = fromList $ zip charsTU (Data.List.map (randomNode . randD) (randomGenerators g))
 
 getRandomAlternatives n g = Data.List.take n $ (Data.List.map getRandomAlternative $ randomGenerators g)
-
 
 main = do
   g <- newStdGen
