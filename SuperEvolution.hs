@@ -23,10 +23,9 @@ calcFunc :: Func -> Double -> Double -> Double
 calcFunc Add t1 t2 = t1 + t2
 calcFunc Sub t1 t2 = t1 - t2
 calcFunc Mul t1 t2 = t1 * t2
-
-defaultTU1 = TranslationUnit ('a', 'a') (Lit 1) Add
-
-defaultAlternative = fromList [('a', defaultTU1), ('b', defaultTU1), ('c', defaultTU1)]
+calcFunc Div t1 t2 = t1 / t2
+calcFunc Pow t1 t2 = t1 ** t2
+calcFunc Log t1 t2 = logBase t1 t2
 
 toTree :: TranslationUnit -> Alternative -> Integer -> Tree
 toTree t a n
@@ -38,29 +37,28 @@ altToTree a = toTree (alternativeTop a) a treeDepth
 
 getPositionInList f l = l !! (floor $ f* (fromIntegral $ length l))
 
-getTUChar :: Double -> String -> Char
-getTUChar f s = getPositionInList f $ s
+getTU :: Double -> [Integer] -> Integer
+getTU f s = getPositionInList f $ s
 
 getLeaf :: [Double] -> Leaf
-getLeaf r = if ((r !! 0) < 0.5) then (Lit (r !! 1)) else (Var (getTUChar (r !! 1) charsSol))
+getLeaf r = if ((r !! 0) < 0.5) then (Lit (r !! 1)) else (Var (getPositionInList (r !! 1) charsSol))
 
 getFunction f = getPositionInList f availableFunctions
 
 getMutatedChildren (c1,c2) r = (maybeChange c1 (r !! 0) (r !! 1), maybeChange c2 (r !! 2) (r !! 3))
-   where maybeChange c f1 f2 = if (f1 < mutateChildChance) then getTUChar f2 charsTU else c
+   where maybeChange c f1 f2 = if (f1 < mutateChildChance) then getTU f2 availableTU else c
 
-getMutatedLeafProperty r (Var a) = if (r !! 0) < changeVariableChance then (Var (getTUChar (r !! 1) charsSol)) else (Var a)
+getMutatedLeafProperty r (Var a) = if (r !! 0) < changeVariableChance then (Var (getPositionInList (r !! 1) charsSol)) else (Var a)
 getMutatedLeafProperty r (Lit a) = if (r !! 0) < changeNumberChance then (Lit (a * (randInRange changeNumberRange (r !! 1)))) else (Lit a)
 
 getMutatedLeaf l r = if ((r !! 0) < mutateLeafChance) then getLeaf (tail r) else getMutatedLeafProperty (tail r) l
 
 getMutatedFunction f r = if ((r !! 0) < mutateFuncChance) then getFunction (r !! 1) else f
 
---getRandomNode = do
-  --randomNode <$> randDouble <*> randDouble <*> randDouble <*> randDouble <*> randDouble
+
 
 randomNode r =
-  let newChildren = (getTUChar (r !! 0) charsTU, getTUChar (r !! 1) charsTU)
+  let newChildren = (getTU (r !! 0) availableTU, getTU (r !! 1) availableTU)
       newLeaf = getLeaf $ Data.List.drop 4 r
       newFunc = getFunction (r !! 3) 
   in  TranslationUnit newChildren newLeaf newFunc
@@ -74,6 +72,7 @@ mutateNode g n =
   in TranslationUnit newChildren newLeaf newFunc
  
 --randDouble = randomRIO (0.0::Double,0.9999::Double)
+randD :: StdGen -> [Double] -- returns an infinite list of random doubles
 randD = randomRs (0.0::Double, 0.9999::Double)
 
 calcAltValue :: Env -> Alternative -> Double
@@ -96,7 +95,7 @@ cullAlternatives ran r al = Data.List.map (\(_,a,_) -> a) $ Data.List.filter (\(
 newAlternatives n g a = Data.List.take n $ Data.List.map (getNewAlternativeFrom a) $ randomGenerators g  
 
 combineAlternatives :: Alternative -> Alternative -> [Double] -> Alternative
-combineAlternatives a1 a2 rands = fromList $ Data.List.map (\(r, c) -> (c, if (r < 0.5) then (a1 ! c) else (a2 ! c))) $ zip rands charsTU
+combineAlternatives a1 a2 rands = fromList $ Data.List.map (\(r, c) -> (c, if (r < 0.5) then (a1 ! c) else (a2 ! c))) $ zip rands availableTU
 
 getNewAlternativeFrom :: [Alternative] -> StdGen -> Alternative
 getNewAlternativeFrom a g =
@@ -128,11 +127,11 @@ getNextGeneration :: StdGen -> [Alternative] -> [Alternative]
 getNextGeneration g alts =
   let sorted = sortAlternatives alts -- sort the alternatives for culling
       (g1,g2) = System.Random.split g
-      nextGen = cullAlternatives (randD g1) cullRatio sorted -- removed culled alternatives
+      nextGen = Data.List.filter ((not . isNaN) . (calculateTreeFitness defaultSolutions)) $ cullAlternatives (randD g1) cullRatio sorted -- removed culled alternatives
       newGen = newAlternatives (numAlternatives - (length nextGen)) g2 nextGen
   in  nextGen ++ newGen 
 
-getRandomAlternative g = fromList $ zip charsTU (Data.List.map (randomNode . randD) (randomGenerators g))
+getRandomAlternative g = fromList $ zip availableTU (Data.List.map (randomNode . randD) (randomGenerators g))
 
 getRandomAlternatives n g = Data.List.take n $ (Data.List.map getRandomAlternative $ randomGenerators g)
 

@@ -5,17 +5,17 @@ import Data.Map
 import Data.List
 import Data.Ord
 
-mutateChildChance = 0.05
-mutateLeafChance = 0.05
-mutateFuncChance = 0.05
+mutateChildChance = 0.02
+mutateLeafChance = 0.02
+mutateFuncChance = 0.02
 changeNumberChance = 0.05
-changeVariableChance = 0.05
+changeVariableChance = 0.02
 changeNumberRange = (0.5, 1.5)
-cullRatio = 0.15
+cullRatio = 0.10 -- values greater than 0.5 will give strange results
 
 charsSol = ['x']
-charsTU = ['a', 'b', 'c', 'd', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm']
-numAlternatives = 100 :: Int
+availableTU = [1..15] -- the maximum number of genes
+numAlternatives = 1000 :: Int
 treeDepth = 4
 
-availableFunctions = [Add,Sub,Mul]
+availableFunctions = [Add,Sub,Mul, Pow, Div, Log]
