@@ -8,11 +8,14 @@ import Data.Ord
 mutateChildChance = 0.05
 mutateLeafChance = 0.05
 mutateFuncChance = 0.05
-cullRatio = 0.2
+changeNumberChance = 0.05
+changeVariableChance = 0.05
+changeNumberRange = (0.5, 1.5)
+cullRatio = 0.10
 
 charsSol = ['x']
 charsTU = ['a', 'b', 'c', 'd', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm']
-numAlternatives = 300 :: Int
+numAlternatives = 1000 :: Int
 treeDepth = 4
 
 availableFunctions = [Add,Sub,Mul]
