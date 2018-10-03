@@ -49,13 +49,11 @@ getMutatedChildren (c1,c2) r = (maybeChange c1 (r !! 0) (r !! 1), maybeChange c2
    where maybeChange c f1 f2 = if (f1 < mutateChildChance) then getTU f2 availableTU else c
 
 getMutatedLeafProperty r (Var a) = if (r !! 0) < changeVariableChance then (Var (getPositionInList (r !! 1) charsSol)) else (Var a)
-getMutatedLeafProperty r (Lit a) = if (r !! 0) < changeNumberChance then (Lit (a * (randInRange changeNumberRange (r !! 1)))) else (Lit a)
+getMutatedLeafProperty r (Lit a) = if (r !! 0) < changeNumberChance then (Lit (a * (randInRange changeNumberRange (r !! 1))**5)) else (Lit a)
 
 getMutatedLeaf l r = if ((r !! 0) < mutateLeafChance) then getLeaf (tail r) else getMutatedLeafProperty (tail r) l
 
 getMutatedFunction f r = if ((r !! 0) < mutateFuncChance) then getFunction (r !! 1) else f
-
-
 
 randomNode r =
   let newChildren = (getTU (r !! 0) availableTU, getTU (r !! 1) availableTU)
@@ -80,16 +78,16 @@ calcAltValue e a = (calculate (altToTree a) e)
 
 -- lower is better
 calculateTreeFitness :: [Solution] -> Alternative -> Double
-calculateTreeFitness s a = Data.List.foldl' (\a b -> a + (diff s b)**2) 0 s
+calculateTreeFitness s a = sum $ Data.List.map (\b -> (diff a b)**2) s--Data.List.foldl' (\a b -> a + (diff s b)**2) 0 s
   where diff s sol = (value sol) - calcAltValue (environment sol) a
 
 
-createSolutions f = Prelude.map (\a -> Solution (fromList [('x', a)]) $ f a) [0.0..100.0] 
+createSolutions f = Prelude.map (\a -> Solution (fromList [('x', a)]) $ f a) [0.0..200.0] 
 
-defaultSolutions = createSolutions (\x -> x*x + x + 4.2 ) -- x ^ 2 + x + 4.2 is the solution
+defaultSolutions = createSolutions (\x -> x*x + x + 92 ) -- x ^ 2 + x + 4.2 is the solution
 
 cullAlternatives :: [Double] -> Double -> [Alternative] -> [Alternative]
-cullAlternatives ran r al = Data.List.map (\(_,a,_) -> a) $ Data.List.filter (\(i,a,rn) -> (r * 2.0 * (fromIntegral i)) <= ((fromIntegral $ length al) * rn)) zipped
+cullAlternatives ran r al = Data.List.map (\(_,a,_) -> a) $ Data.List.filter (\(i,a,rn) -> (r * 2.0 * (fromIntegral i)) < ((fromIntegral $ length al) * rn)) zipped
   where zipped = zip3 [0..] al ran
 
 newAlternatives n g a = Data.List.take n $ Data.List.map (getNewAlternativeFrom a) $ randomGenerators g  
