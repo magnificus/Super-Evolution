@@ -65,11 +65,11 @@ calculateTreeFitness s a = sum $ Data.List.map (\b -> (diff a b)**2) s
   where diff s sol = (value sol) - calcAltValue (environment sol) a
 
 createSolutions2 f = Prelude.map (\a -> Solution (fromList [('x', a)]) $ f a) [-10.0..10.0] 
-createSolutions f r = Prelude.map (\(a,b) -> Solution (fromList [('x', a), ('y', b)]) $ f a b) $ zip (Data.List.take 10 bigR) $ ((Data.List.take 10) . (Data.List.drop 10)) bigR
-  where bigR = Data.List.map (100*) r
+createSolutions f r = Prelude.map (\(a,b) -> Solution (fromList [('x', a), ('y', b)]) $ f a b) $ zip (Data.List.take 15 bigR) $ ((Data.List.take 15) . (Data.List.drop 15)) bigR
+  where bigR = Data.List.map ((100-) . (200*)) r
 
 defaultSolutions2 = createSolutions2 (\x -> x**x + 10) 
-defaultSolutions = createSolutions (\x y -> x*y - 50 + x**x) 
+defaultSolutions = createSolutions (\x y -> x*y - (50*y) ) 
 
 cullAlternatives :: [Double] -> Double -> [Alternative] -> [Alternative]
 cullAlternatives ran r al = Data.List.map (\(_,a,_) -> a) $ Data.List.filter (\(i,a,rn) -> (r * 2.0 * (fromIntegral i)) < ((fromIntegral $ length al) * rn)) zipped
@@ -111,8 +111,7 @@ getNextGeneration g alts =
   let (g1,g2) = System.Random.split g
       (g3,g4) = System.Random.split g2
       sorted = sortAlternatives (randD g3) alts-- sort the alternatives for culling
-
-      nextGen = cullAlternatives (randD g1) cullRatio sorted -- removed culled alternatives
+      nextGen = Data.List.filter ((not . isNaN) . (calculateTreeFitness $ defaultSolutions (randD g1))) $ cullAlternatives (randD g1) cullRatio sorted -- removed culled alternatives
       newGen = newAlternatives (numAlternatives - (length nextGen)) g2 nextGen
   in  nextGen ++ newGen 
 
