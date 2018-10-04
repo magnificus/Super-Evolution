@@ -35,4 +35,21 @@ instance Show Leaf where
 -- this is our evolutionary organism, just a map of Integers and translationUnits, the origin is the one that corresponds to '1'
 type Alternative = Map Integer TranslationUnit
 
+calculate :: Tree -> Env -> Double
+calculate EmptyTree _ = 0
+calculate (Node f t1 t2 ) e = calcFunc f (calculate t1 e) (calculate t2 e)
+calculate (Leaf l) e = calcLeaf l e
+
+calcLeaf :: Leaf -> Env -> Double
+calcLeaf (Lit a) _ = a
+calcLeaf (Var a) e = e ! a
+
+calcFunc :: Func -> Double -> Double -> Double
+calcFunc Add t1 t2 = t1 + t2
+calcFunc Sub t1 t2 = t1 - t2
+calcFunc Mul t1 t2 = t1 * t2
+calcFunc Div t1 t2 = t1 / t2
+calcFunc Pow t1 t2 = t1 ** t2
+calcFunc Log t1 t2 = logBase t1 t2
+
 alternativeTop a = a ! 1 
