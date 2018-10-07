@@ -10,6 +10,7 @@ import Data.Maybe
 import EvolutionTypes
 import EvolutionConfig
 import EvolutionHelpers
+import EvolutionParser
 
 altToTree :: Alternative -> Tree
 altToTree a = toTree (alternativeTop a) a treeDepth
@@ -58,7 +59,7 @@ createSolutions f r = Prelude.map (\(a,b) -> Solution (fromList [('x', a), ('y',
   where bigR = Data.List.map ((500-) . (1000*)) r -- random numbers between -500 and 500
 
 defaultSolutions2 = createSolutions2 (\x -> x**x + 10) 
-defaultSolutions = createSolutions (\x y -> 1000000) 
+defaultSolutions = createSolutions (\x y -> x*x*y + 30) 
 
 cullAlternatives :: [Double] -> Double -> [Alternative] -> [Alternative]
 cullAlternatives ran r al = Data.List.map (\(_,a,_) -> a) $ Data.List.filter (\(i,a,rn) -> (r * 2.0 * (fromIntegral i)) < ((fromIntegral $ length al) * rn)) zipped
@@ -86,8 +87,9 @@ nextGenG (al,g) = (getNextGeneration g1 al, g2 )
 gatherData :: [Alternative] -> [Solution] -> StdGen -> [(Double,Tree)] -- (Best fitness, Best Tree)
 gatherData al sol g =
   let generations = Data.List.map fst $ (iterate nextGenG (al, g)) 
-      fitnessValues = Data.List.map (\a -> ((calculateTreeFitness sol) (a !! 0), altToTree (a !! 0))) generations
-  in fitnessValues
+      nonEmptyGens = Data.List.filter (\a -> length a > 0) generations
+      fitnessValues = Data.List.map (\a -> ((calculateTreeFitness sol) (a !! 0), altToTree (a !! 0))) nonEmptyGens
+  in  fitnessValues
 
 getNextGeneration :: StdGen -> [Alternative] -> [Alternative]
 getNextGeneration g alts =
@@ -96,7 +98,7 @@ getNextGeneration g alts =
       sorted = sortAlternatives (randD g3) alts-- sort the alternatives for culling
       filterNotNan =  Data.List.filter ((not . isNaN) . (calculateTreeFitness $ defaultSolutions (randD g1)))
       nextGen = filterNotNan $ cullAlternatives (randD g1) cullRatio sorted -- removed culled alternatives
-      newGen = newAlternatives (numAlternatives - (length nextGen)) g2 nextGen
+      newGen = if (length nextGen) == 0 then (getRandomAlternatives numAlternatives g2) else (newAlternatives (numAlternatives - (length nextGen)) g2 nextGen)
   in  nextGen ++ newGen 
 
 getRandomAlternative g = fromList $ zip availableTU (Data.List.map (randomNode . randD) (randomGenerators g))

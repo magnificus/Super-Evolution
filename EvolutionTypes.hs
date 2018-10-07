@@ -21,22 +21,21 @@ instance Show Func where
    show Div = "/"
    show Pow = "^"
    show Log = "log"
+   show LeftOnly = "LeftOnly"
+   show RightOnly = "RightOnly"
 
 instance Show Tree where
     show EmptyTree = ""
     show (Leaf (Lit x)) = show x
     show (Leaf (Var x)) = show x
-   -- show (Node f t1 t2) = "(" ++ (show t1) ++ " " ++ (show f) ++ " " ++ (show t2) ++ ")"
-    show (Node Add t1 t2) = "(" ++ (show t1) ++ " + " ++ (show t2) ++ ")"
-    show (Node Sub t1 t2) = "(" ++ (show t1) ++ " - " ++ (show t2) ++ ")"
-    show (Node Mul t1 t2) = "(" ++ (show t1) ++ " * " ++ (show t2) ++ ")"
-    show (Node Div t1 t2) = "(" ++ (show t1) ++ " / " ++ (show t2) ++ ")"
-    show (Node Pow t1 t2) = "(" ++ (show t1) ++ " ^ " ++ (show t2) ++ ")"
-    show (Node Log t1 t2) = "log(" ++ (show t1) ++ ")"
+    show (Node Add t1 t2) = (show t1) ++ " + " ++ (show t2)
+    show (Node Sub t1 t2) = (show t1) ++ " - " ++ (show t2)
+    show (Node Mul t1 t2) = "(" ++ (show t1) ++ ") * (" ++ (show t2) ++ ")"
+    show (Node Div t1 t2) = "(" ++ (show t1) ++ ") / (" ++ (show t2) ++ ")"
+    show (Node Pow t1 t2) = "(" ++ (show t1) ++ ") ^ (" ++ (show t2) ++ ")"
+    show (Node Log t1 t2) = "logAbs(" ++ (show t1) ++ ")"
     show (Node LeftOnly t1 t2) = show t1
     show (Node RightOnly t1 t2) = show t2
-    --show (Node f t1 t2) = "(" ++ (show t1) ++ " " ++ (show f) ++ " " ++ (show t2) ++ ")"
-    --show (Node f t1 t2) = "(" ++ (show t1) ++ " " ++ (show f) ++ " " ++ (show t2) ++ ")"
 
 instance Show Leaf where
    show (Lit a) = show a
@@ -60,7 +59,7 @@ calcFunc Sub t1 t2 = t1 - t2
 calcFunc Mul t1 t2 = t1 * t2
 calcFunc Div t1 t2 = t1 / t2
 calcFunc Pow t1 t2 = t1 ** t2
-calcFunc Log t1 t2 = log t1 --(ignores t2)
+calcFunc Log t1 t2 = log (abs t1) --(ignores t2)
 calcFunc LeftOnly t1 t2 = t1 --(ignores t2)
 calcFunc RightOnly t1 t2 = t2 --(ignores t2)
 
