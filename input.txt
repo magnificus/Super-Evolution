@@ -1,4 +1,4 @@
-x=1, res = 1
+x = 1, res =  1
 x = 2, res = 10
 x = 3, res = 100
 x = 4, res = 1000

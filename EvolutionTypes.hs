@@ -6,9 +6,9 @@ import Data.Ord
 
 data Tree = EmptyTree | Node Func Tree Tree | Leaf Leaf
 data Func = Add | Sub | Mul | Pow | Log | Div | LeftOnly | RightOnly
-data Leaf = Lit Double | Var Char
+data Leaf = Lit Double | Var String
 
-type Env = Map Char Double -- An environment is defined as a map of id:s (variables) and their corresponding values
+type Env = Map String Double -- An environment is defined as a map of id:s (variables) and their corresponding values
 data Solution = Solution {environment :: Env, value :: Double} deriving (Show)-- this type corresponds to an environment together with the ideal ouput result
 
 -- A Translation unit contains the next step (two chars), the single node expression, and the binary node expression

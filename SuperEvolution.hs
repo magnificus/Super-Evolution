@@ -54,12 +54,12 @@ calculateTreeFitness s a = sum $ Data.List.map (\b -> (diff a b)**2) s
 
 numTake = 10
 
-createSolutions2 f = Prelude.map (\a -> Solution (fromList [('x', a)]) $ f a) [-10.0..10.0] 
-createSolutions f r = Prelude.map (\(a,b) -> Solution (fromList [('x', a), ('y', b)]) $ f a b) $ zip (Data.List.take numTake bigR) $ ((Data.List.take numTake) . (Data.List.drop numTake)) bigR
-  where bigR = Data.List.map ((500-) . (1000*)) r -- random numbers between -500 and 500
+--createSolutions2 f = Prelude.map (\a -> Solution (fromList [('x', a)]) $ f a) [-10.0..10.0] 
+--createSolutions f r = Prelude.map (\(a,b) -> Solution (fromList [('x', a), ('y', b)]) $ f a b) $ zip (Data.List.take numTake bigR) $ ((Data.List.take numTake) . (Data.List.drop numTake)) bigR
+ -- where bigR = Data.List.map ((500-) . (1000*)) r -- random numbers between -500 and 500
 
-defaultSolutions2 = createSolutions2 (\x -> x**x + 10) 
-defaultSolutions = createSolutions (\x y -> x*x*y + 30) 
+--defaultSolutions2 = createSolutions2 (\x -> x**x + 10) 
+--defaultSolutions = createSolutions (\x y -> x*x*y + 30) 
 
 cullAlternatives :: [Double] -> Double -> [Alternative] -> [Alternative]
 cullAlternatives ran r al = Data.List.map (\(_,a,_) -> a) $ Data.List.filter (\(i,a,rn) -> (r * 2.0 * (fromIntegral i)) < ((fromIntegral $ length al) * rn)) zipped
@@ -78,25 +78,25 @@ getNewAlternativeFrom a g =
       combinedAlternative = combineAlternatives (cpAlt (rands !! 0)) (cpAlt (rands !! 1)) (Data.List.drop 2 rands)
   in Data.Map.map (mutateNode (randGs !! 1)) combinedAlternative
 
-sortAlternatives r = sortBy (comparing (calculateTreeFitness (defaultSolutions r)))
+sortAlternatives sols = sortBy (comparing (calculateTreeFitness sols))
 
-nextGenG :: ([Alternative], StdGen) -> ([Alternative], StdGen)
-nextGenG (al,g) = (getNextGeneration g1 al, g2 )
+nextGenG :: ([Solution], [Alternative], StdGen) -> ([Solution], [Alternative], StdGen)
+nextGenG (sols, al,g) = (sols, getNextGeneration sols g1 al, g2 )
   where (g1, g2) = (System.Random.split g)
 
 gatherData :: [Alternative] -> [Solution] -> StdGen -> [(Double,Tree)] -- (Best fitness, Best Tree)
 gatherData al sol g =
-  let generations = Data.List.map fst $ (iterate nextGenG (al, g)) 
+  let generations = Data.List.map (\(_,a,_) -> a) $ (iterate nextGenG (sol, al, g)) 
       nonEmptyGens = Data.List.filter (\a -> length a > 0) generations
       fitnessValues = Data.List.map (\a -> ((calculateTreeFitness sol) (a !! 0), altToTree (a !! 0))) nonEmptyGens
   in  fitnessValues
 
-getNextGeneration :: StdGen -> [Alternative] -> [Alternative]
-getNextGeneration g alts =
+getNextGeneration :: [Solution] -> StdGen -> [Alternative] -> [Alternative]
+getNextGeneration sols g alts =
   let (g1,g2) = System.Random.split g
       (g3,g4) = System.Random.split g2
-      sorted = sortAlternatives (randD g3) alts-- sort the alternatives for culling
-      filterNotNan =  Data.List.filter ((not . isNaN) . (calculateTreeFitness $ defaultSolutions (randD g1)))
+      sorted = sortAlternatives sols alts-- sort the alternatives for culling
+      filterNotNan =  Data.List.filter ((not . isNaN) . (calculateTreeFitness sols))
       nextGen = filterNotNan $ cullAlternatives (randD g1) cullRatio sorted -- removed culled alternatives
       newGen = if (length nextGen) == 0 then (getRandomAlternatives numAlternatives g2) else (newAlternatives (numAlternatives - (length nextGen)) g2 nextGen)
   in  nextGen ++ newGen 
@@ -108,7 +108,8 @@ getRandomAlternatives n g = Data.List.take n $ (Data.List.map getRandomAlternati
 main = do
   g <- newStdGen
   let rands = randomGenerators g
+  let solutions = [(Solution (fromList [("x", 1)]) (1.0))]
   let alternatives = getRandomAlternatives numAlternatives (rands !! 0)
-  let res = gatherData alternatives (defaultSolutions (randD (rands !! 2))) (rands !! 1) 
+  let res = gatherData alternatives solutions (rands !! 1) 
   mapM_ putStrLn $ Data.List.map show res
   return res
