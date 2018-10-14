@@ -108,7 +108,7 @@ getRandomAlternatives n g = Data.List.take n $ (Data.List.map getRandomAlternati
 main = do
   g <- newStdGen
   let rands = randomGenerators g
-  let solutions = [(Solution (fromList [("x", 1)]) (1.0))]
+  solutions <- getSolutions --[(Solution (fromList [("x", 1)]) (1.0))]
   let alternatives = getRandomAlternatives numAlternatives (rands !! 0)
   let res = gatherData alternatives solutions (rands !! 1) 
   mapM_ putStrLn $ Data.List.map show res

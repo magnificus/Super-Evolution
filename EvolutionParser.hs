@@ -7,7 +7,6 @@ import Data.List
 import Text.ParserCombinators.Parsec
 import Data.Either
 import Data.Maybe
-
 import EvolutionTypes
 
 type Input = [[(String, String)]] -- list of list of string pairs
@@ -24,7 +23,7 @@ eos = do oneOf " ,"
     <?> "end of statement"
 
 eol :: Parser ()
-eol = do oneOf "\r\n"--choice [char '\r',char '\n']
+eol = do oneOf "\r\n"
          return ()
     <?> "end of line"
 
@@ -51,7 +50,11 @@ file = manyTill line eof
 
 
 getSolutions = do
-    1
+    inputEithers <- readInput "input.txt"
+    solutions <- case inputEithers of
+        Left err -> return [(Solution (fromList []) 0)]
+        Right input -> return $ Data.List.map toSolution input
+    return solutions
 
 readInput :: String -> IO (Either ParseError Input)
 readInput = parseFromFile file 
