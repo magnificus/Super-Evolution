@@ -36,7 +36,7 @@ item = do skipMany space
           skipMany emptyChars
           char '='
           skipMany emptyChars
-          value <- many digit
+          value <- manyTill anyChar (try $ eol <|> eos <|> eof)
           skipMany emptyChars
           skipMany (char ',')
           return (key, value)

@@ -16,6 +16,6 @@ cullRatio = 0.10 -- values greater than 0.5 will give strange results
 charsSol = ["x"]
 availableTU = [1..100] -- the maximum number of genes
 numAlternatives = 500 :: Int
-treeDepth = 5
+treeDepth = 4
 
 availableFunctions = [Add,Sub,Mul, Div, Pow ,Log, LeftOnly, RightOnly]
