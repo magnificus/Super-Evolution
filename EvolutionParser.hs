@@ -31,19 +31,19 @@ emptyChars = oneOf " \t"
 
 item :: Parser (String, String)
 
-item = do skipMany space
+item = do skipMany emptyChars 
           key <- ident
           skipMany emptyChars
           char '='
           skipMany emptyChars
-          value <- manyTill anyChar (try $ eol <|> eos <|> eof)
+          value <- manyTill anyChar (lookAhead $ eol <|> eos <|> eof)
           skipMany emptyChars
           skipMany (char ',')
           return (key, value)
 
 
 line :: Parser [(String, String)]
-line = manyTill item (try $ eol <|> eof) 
+line = manyTill item (eol <|> lookAhead eof)
 
 file :: Parser [[(String, String)]]
 file = manyTill line eof

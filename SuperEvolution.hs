@@ -54,13 +54,6 @@ calculateTreeFitness s a = sum $ Data.List.map (\b -> (diff a b)**2) s
 
 numTake = 10
 
---createSolutions2 f = Prelude.map (\a -> Solution (fromList [('x', a)]) $ f a) [-10.0..10.0] 
---createSolutions f r = Prelude.map (\(a,b) -> Solution (fromList [('x', a), ('y', b)]) $ f a b) $ zip (Data.List.take numTake bigR) $ ((Data.List.take numTake) . (Data.List.drop numTake)) bigR
- -- where bigR = Data.List.map ((500-) . (1000*)) r -- random numbers between -500 and 500
-
---defaultSolutions2 = createSolutions2 (\x -> x**x + 10) 
---defaultSolutions = createSolutions (\x y -> x*x*y + 30) 
-
 cullAlternatives :: [Double] -> Double -> [Alternative] -> [Alternative]
 cullAlternatives ran r al = Data.List.map (\(_,a,_) -> a) $ Data.List.filter (\(i,a,rn) -> (r * 2.0 * (fromIntegral i)) < ((fromIntegral $ length al) * rn)) zipped
   where zipped = zip3 [0..] al ran
