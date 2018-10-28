@@ -48,7 +48,7 @@ line = manyTill item (eol <|> lookAhead eof)
 file :: Parser [[(String, String)]]
 file = manyTill line eof
 
-
+getSolutions :: IO [Solution]
 getSolutions = do
     inputEithers <- readInput "input.txt"
     solutions <- case inputEithers of
@@ -59,9 +59,6 @@ getSolutions = do
 readInput :: String -> IO (Either ParseError Input)
 readInput = parseFromFile file 
 
+-- takes the string inputs and transforms them into the solution data type for use in program
 toSolution i = Solution (Data.Map.delete "res" mapped) (mapped ! "res")
     where mapped = fromList $ Data.List.map (\(a,b) -> (a, read b :: Double)) i
-   -- do result <- parseFromFile file name
-   --    return $ case result of
-   --      Left err -> Left err
-   --      Right xs -> Right xs

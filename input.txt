@@ -1,5 +1,5 @@
-x = 1, res = 2
-x = 2, res = 4
-x = 3, res = 8
-x = 4, res = 16
-x = 5, res = 32
+x = 1, y = 4, res = 3
+x = 2, y = 5, res = 5
+x = 1, y = 5, res = 4
+x = 2, y = 1, res = 1
+x = 3, y = 10, res = 11

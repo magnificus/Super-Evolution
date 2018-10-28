@@ -8,12 +8,12 @@ import Data.Ord
 mutateChildChance = 0.03
 mutateLeafChance = 0.03
 mutateFuncChance = 0.03
-changeNumberChance = 0.03
+changeNumberChance = 0.1
 changeVariableChance = 0.02
 changeNumberRange = (0.5, 1.5)
-cullRatio = 0.10 -- values greater than 0.5 will give strange results
+cullRatio = 0.15 -- values greater than 0.5 will give strange results
 
-charsSol = ["x"]
+--charsSol = ["x"]
 availableTU = [1..100] -- the maximum number of genes
 numAlternatives = 500 :: Int
 treeDepth = 4

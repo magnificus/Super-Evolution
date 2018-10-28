@@ -11,6 +11,9 @@ data Leaf = Lit Double | Var String
 type Env = Map String Double -- An environment is defined as a map of id:s (variables) and their corresponding values
 data Solution = Solution {environment :: Env, value :: Double} deriving (Show)-- this type corresponds to an environment together with the ideal ouput result
 
+getVariables :: Solution -> [String]
+getVariables = keys . (Data.Map.delete "res") . environment
+
 -- A Translation unit contains the next step (two chars), the single node expression, and the binary node expression
 data TranslationUnit = TranslationUnit {childrenNodes :: (Integer, Integer), singleNode :: Leaf, function :: Func } deriving (Show)
 
