@@ -11,6 +11,7 @@ data Leaf = Lit Double | Var String
 type Env = Map String Double -- An environment is defined as a map of id:s (variables) and their corresponding values
 data Solution = Solution {environment :: Env, value :: Double} deriving (Show)-- this type corresponds to an environment together with the ideal ouput result
 
+-- looks inside a solution and returns the possible variables to use in the tree
 getVariables :: Solution -> [String]
 getVariables = keys . (Data.Map.delete "res") . environment
 
@@ -64,11 +65,12 @@ calcFunc Div t1 t2 = t1 / t2
 calcFunc Pow t1 t2 = t1 ** t2
 calcFunc Log t1 t2 = log (abs t1) --(ignores t2)
 calcFunc LeftOnly t1 t2 = t1 --(ignores t2)
-calcFunc RightOnly t1 t2 = t2 --(ignores t2)
+calcFunc RightOnly t1 t2 = t2 --(ignores t1)
 
 alternativeTop a = a ! 1 
 
+-- returns a tree from an initial TranslationUnit and an Alternative
 toTree :: TranslationUnit -> Alternative -> Integer -> Tree
 toTree t a n
    | n > 1 = Node (function t) (toTree ((!) a . fst $ childrenNodes t) a (n-1)) (toTree  ((!) a . snd $ childrenNodes t) a (n-1))
-   | otherwise =  Leaf (singleNode t)
+   | otherwise = Leaf (singleNode t)

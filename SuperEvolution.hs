@@ -43,7 +43,8 @@ mutateNode s g n =
       newLeaf = getMutatedLeaf s (singleNode n) $ randD leafR
       newFunc = getMutatedFunction (function n) $ randD funcR
   in TranslationUnit newChildren newLeaf newFunc
- 
+
+-- gets the returned value of an alternative and an environment 
 calcAltValue :: Env -> Alternative -> Double
 calcAltValue e a = (calculate (altToTree a) e)
 
@@ -52,8 +53,7 @@ calculateTreeFitness :: [Solution] -> Alternative -> Double
 calculateTreeFitness s a = sum $ Data.List.map (\b -> (diff a b)**2) s
   where diff s sol = (value sol) - calcAltValue (environment sol) a
 
-numTake = 10
-
+-- randomly culls options with a linearly increasing likelohood of culling based on position in list (assumes the list is sorted)
 cullAlternatives :: [Double] -> Double -> [Alternative] -> [Alternative]
 cullAlternatives ran r al = Data.List.map (\(_,a,_) -> a) $ Data.List.filter (\(i,a,rn) -> (r * 2.0 * (fromIntegral i)) < ((fromIntegral $ length al) * rn)) zipped
   where zipped = zip3 [0..] al ran
@@ -78,8 +78,7 @@ nextGenG :: ([Solution], [Alternative], StdGen) -> ([Solution], [Alternative], S
 nextGenG (sols, al,g) = (sols, getNextGeneration sols g1 al, g2 )
   where (g1, g2) = (System.Random.split g)
 
-
-gatherData :: [Alternative] -> [Solution] -> StdGen -> [(Double,Tree)] -- (Best fitness, Best Tree)
+gatherData :: [Alternative] -> [Solution] -> StdGen -> [(Double, Tree)] -- (Best fitness, Best Tree)
 gatherData al sol g =
   let generations = Data.List.map (\(_,a,_) -> a) $ (iterate nextGenG (sol, al, g)) 
       nonEmptyGens = Data.List.filter (\a -> length a > 0) generations
@@ -88,24 +87,24 @@ gatherData al sol g =
 
 getNextGeneration :: [Solution] -> StdGen -> [Alternative] -> [Alternative]
 getNextGeneration sols g alts =
-  let (g1,g2) = System.Random.split g
-      (g3,g4) = System.Random.split g2
+  let [g1,g2,g3,g4] = Data.List.take 4 $ randomGenerators g
       availableStrings = getVariables (sols !! 0)
       sorted = sortAlternatives sols alts-- sort the alternatives for culling
-      filterNotNan =  Data.List.filter ((not . isNaN) . (calculateTreeFitness sols))
+      filterNotNan = Data.List.filter ((not . isNaN) . (calculateTreeFitness sols)) -- remove equations that return invalid values
       nextGen = filterNotNan $ cullAlternatives (randD g1) cullRatio sorted -- removed culled alternatives
       newGen = if (length nextGen) == 0 then (getRandomAlternatives numAlternatives availableStrings g2) else (Data.List.take (numAlternatives - (length nextGen)) $ newAlternatives availableStrings g2 nextGen)
   in  nextGen ++ newGen 
 
 getRandomAlternative s g = fromList $ zip availableTU (Data.List.map ((randomNode s). randD) (randomGenerators g))
-
 getRandomAlternatives n s g = Data.List.take n $ (Data.List.map (getRandomAlternative s) $ randomGenerators g)
+
+outputNicely (d,t) = "\n\nBest current solution\nDistance: " ++ (show d) ++ "\nTree: " ++ (show t)
 
 main = do
   g <- newStdGen
   let rands = randomGenerators g
-  solutions <- getSolutions --[(Solution (fromList [("x", 1)]) (1.0))]
+  solutions <- getSolutions 
   let alternatives = getRandomAlternatives numAlternatives (getVariables (solutions !! 0)) (rands !! 0)
   let res = gatherData alternatives solutions (rands !! 1) 
-  mapM_ putStrLn $ Data.List.map show res
+  mapM_ putStrLn $ Data.List.map outputNicely res
   return res

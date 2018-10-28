@@ -9,7 +9,7 @@ import Data.Either
 import Data.Maybe
 import EvolutionTypes
 
-type Input = [[(String, String)]] -- list of list of string pairs
+type Input = [[(String, String)]] -- list of list of string pairs, each list correspond to one solution, expects definitions of variables and "res"
 
 ident :: Parser String
 ident = do c <- letter <|> char '_'
