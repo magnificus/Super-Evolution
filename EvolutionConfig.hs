@@ -8,7 +8,7 @@ import Data.Ord
 mutateChildChance = 0.03
 mutateLeafChance = 0.03
 mutateFuncChance = 0.03
-changeNumberChance = 0.1
+changeNumberChance = 0.15
 changeVariableChance = 0.02
 changeNumberRange = (0.5, 1.5)
 cullRatio = 0.15 -- values greater than 0.5 will give strange results

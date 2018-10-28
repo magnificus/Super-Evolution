@@ -98,7 +98,7 @@ getNextGeneration sols g alts =
 getRandomAlternative s g = fromList $ zip availableTU (Data.List.map ((randomNode s). randD) (randomGenerators g))
 getRandomAlternatives n s g = Data.List.take n $ (Data.List.map (getRandomAlternative s) $ randomGenerators g)
 
-outputNicely (d,t) = "\n\nBest current solution\nDistance: " ++ (show d) ++ "\nTree: " ++ (show t)
+outputNicely (d,t) = "\n--------------------------\nBest current solution:\nDistance: " ++ (show d) ++ "\nTree: " ++ (show t)
 
 main = do
   g <- newStdGen
