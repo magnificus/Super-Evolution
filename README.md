@@ -29,4 +29,8 @@ x = 2, y = 1, res = 3
 x = 3, y = 10, res = 17
 
 
-I have been able to reliably get the "solution" (it's x^2 + y - 2), though the time it takes to get the result varies.
+I have been able to reliably get the "solution" (it's x^2 + y - 2), though the time it takes to get the result varies. This is definitely on the lower end of provided inputs though, the more you give it the better it'll become.
+
+## Problems
+
+Overfitting, though doesn't seem to be as big of an issue as anticipated, will write more on this.
