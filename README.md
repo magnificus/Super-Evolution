@@ -19,9 +19,14 @@ You can either choose to compile the program to an .exe or just use the main fun
 Results have been good so far, but need to test more and test more possible configurations, results are not really reproducible because of the high degree of randomness involved, but for this input:
 
 x = 1, y = 4, res = 3
+
 x = 2, y = 5, res = 7
+
 x = 1, y = 5, res = 4
+
 x = 2, y = 1, res = 3
+
 x = 3, y = 10, res = 17
+
 
 I have been able to reliably get the "solution" (it's x^2 + y - 2), though the time it takes to get the result varies.
