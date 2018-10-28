@@ -16,13 +16,10 @@ TODO write more on the gene structure
 
 You can either choose to compile the program to an .exe or just use the main function inside of SuperEvolution.hs, it'll parse the text file "input.txt" for your input data and output new generations until you stop the program.
 
+You can also modify the static constants in EvolutionConfig.hs, though you'll need to recompile.
 ## Results
 
 Results have been good so far, but need to test more and test more possible configurations, results are not really reproducible because of the high degree of randomness involved, but for this input:
-
-x = 1, y = 4, res = 3
-
-x = 2, y = 5, res = 7
 
 x = 1, y = 5, res = 4
 
@@ -30,6 +27,7 @@ x = 2, y = 1, res = 3
 
 x = 3, y = 10, res = 17
 
+x = 10, y = 1, res = 99
 
 I have been able to reliably get the "solution" (it's x^2 + y - 2), though the time it takes to get the result varies. This is definitely on the lower end of provided inputs though, the more you give it the better it'll become.
 
