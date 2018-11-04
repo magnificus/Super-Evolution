@@ -17,4 +17,4 @@ availableTU = [1..100] -- the "genes" that each correspond to a translation unit
 numAlternatives = 500 :: Int -- the number of organisms to evolve
 treeDepth = 4
 
-availableFunctions = [Add,Sub,Mul, Div, Pow ,Log, LeftOnly, RightOnly]
+availableFunctions = [Add,Sub,Mul, Div, Pow ,Log, LeftOnly, RightOnly] -- functions that the trees are allowed to use

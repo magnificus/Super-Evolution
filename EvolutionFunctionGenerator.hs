@@ -2,31 +2,29 @@ output = "input.txt"
 
 func3 (x, y, z) = x+y+z
 func2 (x,y) = x+y
-func1 x = x
+func1 x = x^x + 4
 
-numsPrint = 100
+numsPrint = 20
 
 --valNames = ["x","y","z"]
 valNames = "x"
 
---toCorrectFormat (ins, res) =  (zip valNames ins) ++ [("res", res)]
-
-
 input = [1..numsPrint]
+input2 = [[1..numsPrint], [1..numsPrint]]
 
 mergeIntoLists [] [] = []
 mergeIntoLists [] (p:ps) = [p] : (mergeIntoLists [] ps)
 mergeIntoLists (l:ls) (p:ps) = (l++[p]) : (mergeIntoLists ls ps)
 
 formatItem (s, n) = s ++ (" = ") ++ (show n) 
+formatLine = foldr1 (\a b -> a ++ "," ++ b)
+formatLines = foldr1 (\a b -> a ++ "\n" ++b)
+
 
 main = do
     let results = map (\r -> ("res", r)) $ map func1 input
     let inputCombined = zip (repeat valNames) input
     let outputList = mergeIntoLists (mergeIntoLists [] inputCombined) results
-    let outputFormatted = map (map formatItem) outputList
-    --let formatted = zip inputCombined results
-    --let formatted = --map (\a -> a ++ [("res", res)]) results
-    --let combined = map (\r -> (zip valNames input) ++ [("res", r)]) results
-    --let formatted = map toCorrectFormat combined
+    let outputFormatted = formatLines $ map formatLine $ map (map formatItem) outputList
+    writeFile output outputFormatted
     return outputFormatted
