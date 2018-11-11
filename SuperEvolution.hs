@@ -12,6 +12,8 @@ import EvolutionConfig
 import EvolutionHelpers
 import EvolutionParser
 
+--this file (together with EvolutionTypes.hs) contains the base logic for the evolutionary structure etc.
+
 altToTree :: Alternative -> Tree
 altToTree a = toTree (alternativeTop a) a treeDepth
 
@@ -36,6 +38,7 @@ randomNode s r =
       newFunc = getFunction (r !! 3) 
   in  TranslationUnit newChildren newLeaf newFunc
 
+-- mutates a node with the help of the random seed g
 mutateNode s g n =
   let (childR, next) = System.Random.split g
       (leafR, funcR) = System.Random.split next
@@ -106,5 +109,5 @@ main = do
   solutions <- getSolutions 
   let alternatives = getRandomAlternatives numAlternatives (getVariables (solutions !! 0)) (rands !! 0)
   let res = gatherData alternatives solutions (rands !! 1) 
-  mapM_ putStrLn $ Data.List.map outputNicely res
+  mapM_ putStrLn $ [outputNicely x | x <- res]
   return res

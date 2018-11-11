@@ -9,6 +9,8 @@ import Data.Either
 import Data.Maybe
 import EvolutionTypes
 
+-- this file contains logic responsible for parsing the content of an input file
+
 type Input = [[(String, String)]] -- list of list of string pairs, each list correspond to one solution, expects definitions of variables and "res"
 
 ident :: Parser String
@@ -40,7 +42,6 @@ item = do skipMany emptyChars
           skipMany emptyChars
           skipMany (char ',')
           return (key, value)
-
 
 line :: Parser [(String, String)]
 line = manyTill item (eol <|> lookAhead eof)

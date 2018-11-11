@@ -28,12 +28,13 @@ instance Show Func where
    show LeftOnly = "LeftOnly"
    show RightOnly = "RightOnly"
 
+
 instance Show Tree where
     show EmptyTree = ""
     show (Leaf (Lit x)) = show x
     show (Leaf (Var x)) = show x
-    show (Node Add t1 t2) = (show t1) ++ " + " ++ (show t2)
-    show (Node Sub t1 t2) = (show t1) ++ " - " ++ (show t2)
+    show (Node Add t1 t2) = "(" ++ (show t1) ++ " + " ++ (show t2) ++ ")"
+    show (Node Sub t1 t2) = "(" ++ (show t1) ++ " - " ++ (show t2) ++ ")"
     show (Node Mul t1 t2) = "(" ++ (show t1) ++ ") * (" ++ (show t2) ++ ")"
     show (Node Div t1 t2) = "(" ++ (show t1) ++ ") / (" ++ (show t2) ++ ")"
     show (Node Pow t1 t2) = "(" ++ (show t1) ++ ") ^ (" ++ (show t2) ++ ")"
