@@ -1,5 +1,8 @@
 module Main where
 
+-- copyright Tobias Elinder, see Licence.txt
+
+
 import System.Random
 import Data.Map
 import Data.List
