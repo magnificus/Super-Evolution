@@ -43,8 +43,24 @@ x = 10, y = 1, res = 99
 
 I have been able to reliably get the "solution" (it's x^2 + y - 2), though the time it takes to get the result varies. This is definitely on the lower end of provided inputs though, the more you give it the better it'll become.
 
+input:
+
+x = 1, y = 2, z = 5, res = 9
+
+x = 1, y = 0, z = 5, res = 7
+
+returns 2x + y + z very quickly.
+
+x = 1, y = 2, res = 2
+
+x = 4, y = 3, res = 65
+
+returns 1 + x^y very quickly.
+
 TODO more results
 
 ## Problems
 
-Overfitting, though doesn't seem to be as big of an issue as anticipated. The program has a harder time finding combinations of very large static numbers and small polynomial factors.
+Overfitting, though doesn't seem to be as big of an issue as anticipated. The maximum tree depth essentially blocks the equations from becoming too complex.
+
+The program has a harder time finding combinations of very large static numbers and small polynomial factors.
