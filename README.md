@@ -49,13 +49,13 @@ x = 1, y = 2, z = 5, res = 9
 
 x = 1, y = 0, z = 5, res = 7
 
-returns 2x + y + z very quickly.
+returns 2x + y + z in a few seconds.
 
 x = 1, y = 2, res = 2
 
 x = 4, y = 3, res = 65
 
-returns 1 + x^y very quickly.
+returns 1 + x^y in a few seconds.
 
 TODO more results
 
