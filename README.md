@@ -2,7 +2,7 @@
 
 ## Background
 
-This repository contains the mostly successful experiment with regression analysis using genetic programming, so in a nutshell, given an arbitrary number of sample points containing the values of different input variables along with the output result, it'll try to find an equation that saisfies these conditions. The exciting thing about this approach is that it in theory works for any equation, it's not limited to for example linear regression or quadratic regression.
+This repository contains the mostly successful experiment with regression analysis using genetic programming, so in a nutshell, given an arbitrary number of sample points containing the values of different input variables along with the output result, it'll try to find an equation that saisfies these conditions. The neat thing about this approach is that it in theory works for any equation, it's not limited to for example linear regression or quadratic regression, it can find functions look like (2^(x-1)) as easily as (10x+1).
 
 ## How it works
 
@@ -10,7 +10,19 @@ This is assuming you're familiar with genetic algorithms already.
 
 The system uses an internal representation of different genes that are expanded into an Abstract Syntax Tree (https://en.wikipedia.org/wiki/Abstract_syntax_tree), that is then evaluated using the provided inputs. Fitness is calculated as sum of squares differences between the output from the AST and the given result. This of course means that lower values correspond to higher fitness, and a fitness of 0.0 means that the solution has been truly "found".
 
-TODO write more on the gene structure
+### DNA Representation
+
+The DNA is represented as a list of "translation units", these contain:
+
+childrenNodes :: (Integer, Integer)
+singleNode :: Leaf
+function :: Func
+
+these properties are mutated and crossbred with each other to create new generations.
+
+To generate an AST tree from these you'll need a treedepth Integer, default is 4.
+
+The first node in the list is called first, it will run its function on the result of the calculation of the translation units on the indices of the pair childrenNodes. These nodes will call their own children and run their function on them. etc. When treedeapth is reached the translation unit returns a leaf instead of a function (a leaf can be either a variable or an static value).
 
 ## Using the program
 
@@ -35,6 +47,4 @@ TODO more results
 
 ## Problems
 
-Overfitting, though doesn't seem to be as big of an issue as anticipated.
-
-TODO write more here
+Overfitting, though doesn't seem to be as big of an issue as anticipated. The program has a harder time finding combinations of very large static numbers and small polynomial factors.
