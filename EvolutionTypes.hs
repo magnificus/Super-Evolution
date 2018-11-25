@@ -46,8 +46,11 @@ instance Show Leaf where
    show (Lit a) = show a
    show (Var a) = show a
 
--- this is our evolutionary organism, just a map of Integers and translationUnits, the origin is the one that corresponds to '1'
-type Alternative = Map Integer TranslationUnit
+-- this is our evolutionary organism, just a map of Integers and translationUnits, and the origin
+data Alternative = Alternative {startIndex :: Integer, translationUnits :: Map Integer TranslationUnit}
+
+--getChildren :: Alternative -> (Integer, Integer)
+--getChildren a = childrenNodes a
 
 calculate :: Tree -> Env -> Double
 calculate EmptyTree _ = 0
@@ -68,10 +71,12 @@ calcFunc Log t1 t2 = log (abs t1) --(ignores t2)
 calcFunc LeftOnly t1 t2 = t1 --(ignores t2)
 calcFunc RightOnly t1 t2 = t2 --(ignores t1)
 
-alternativeTop a = a ! 1 
+alternativeTop a = (translationUnits a) ! (startIndex a)
+
+getTU a n = (translationUnits a) ! n
 
 -- returns a tree from an initial TranslationUnit and an Alternative
 toTree :: TranslationUnit -> Alternative -> Integer -> Tree
 toTree t a n
-   | n > 1 = Node (function t) (toTree ((!) a . fst $ childrenNodes t) a (n-1)) (toTree  ((!) a . snd $ childrenNodes t) a (n-1))
+   | n > 1 = Node (function t) (toTree (getTU a (fst $ childrenNodes t)) a (n-1)) (toTree (getTU a (snd $ childrenNodes t)) a (n-1))
    | otherwise = Leaf (singleNode t)

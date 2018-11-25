@@ -25,8 +25,10 @@ getLeaf s r = if ((r !! 0) < 0.5) then (Lit (r !! 1)) else (Var (getPositionInLi
 
 getFunction f = getPositionInList f availableFunctions
 
-getMutatedChildren (c1,c2) r = (maybeChange c1 (r !! 0) (r !! 1), maybeChange c2 (r !! 2) (r !! 3))
-   where maybeChange c f1 f2 = if (f1 < mutateChildChance) then getPositionInList f2 availableTU else c
+getMutatedChildren (c1,c2) r = (maybeChangeTU c1 (r !! 0) (r !! 1), maybeChangeTU c2 (r !! 2) (r !! 3))
+
+
+maybeChangeTU c f1 f2 = if (f1 < mutateChildChance) then getPositionInList f2 availableTU else c
 
 getMutatedLeafProperty s r (Var a) = if (r !! 0) < changeVariableChance then (Var (getPositionInList (r !! 1) s)) else (Var a)
 getMutatedLeafProperty s r (Lit a) = if (r !! 0) < changeNumberChance then (Lit (a * (lerp changeNumberRange (r !! 1))**4)) else (Lit a)
@@ -42,7 +44,7 @@ randomNode s r =
   in  TranslationUnit newChildren newLeaf newFunc
 
 -- mutates a node with the help of the random seed g
-mutateNode s g n =
+mutateTU s g n =
   let (childR, next) = System.Random.split g
       (leafR, funcR) = System.Random.split next
       newChildren = getMutatedChildren (childrenNodes n) $ randD childR
@@ -68,7 +70,7 @@ newAlternatives :: [String] -> StdGen -> [Alternative] -> [Alternative]
 newAlternatives s g a = Data.List.map (getNewAlternativeFrom a s) $ randomGenerators g  
 
 combineAlternatives :: Alternative -> Alternative -> [Double] -> Alternative
-combineAlternatives a1 a2 rands = fromList $ Data.List.map (\(r, c) -> (c, if (r < 0.5) then (a1 ! c) else (a2 ! c))) $ zip rands availableTU
+combineAlternatives a1 a2 rands = Alternative (maybeChangeTU (startIndex a1) (rands !! 0) (rands !! 1)) $ fromList $ Data.List.map (\(r, c) -> (c, if (r < 0.5) then ((translationUnits a1) ! c) else ((translationUnits a2) ! c))) $ zip (Data.List.drop 2 rands) availableTU
 
 getNewAlternativeFrom :: [Alternative] -> [String] -> StdGen -> Alternative
 getNewAlternativeFrom a s g =
@@ -76,7 +78,7 @@ getNewAlternativeFrom a s g =
       rands = randD g
       cpAlt d = getPositionInList d a
       combinedAlternative = combineAlternatives (cpAlt (rands !! 0)) (cpAlt (rands !! 1)) (Data.List.drop 2 rands)
-  in Data.Map.map (mutateNode s (randGs !! 1)) combinedAlternative
+  in Alternative (startIndex combinedAlternative) $ Data.Map.map (mutateTU s (randGs !! 1)) (translationUnits combinedAlternative)
 
 sortAlternatives sols = sortBy (comparing (calculateTreeFitness sols))
 
@@ -101,7 +103,9 @@ getNextGeneration sols g alts =
       newGen = if (length nextGen) == 0 then (getRandomAlternatives numAlternatives availableStrings g2) else (Data.List.take (numAlternatives - (length nextGen)) $ newAlternatives availableStrings g2 nextGen)
   in  nextGen ++ newGen 
 
-getRandomAlternative s g = fromList $ zip availableTU (Data.List.map ((randomNode s). randD) (randomGenerators g))
+getRandomAlternative s g = Alternative (getPositionInList ((randD g) !! 0) availableTU) $ fromList $ zip availableTU (Data.List.map ((randomNode s). (randD)) (randomGenerators g))
+
+--getRandomAlternatives :: Integer -> [String] -> StdGen -> [Alternative]
 getRandomAlternatives n s g = Data.List.take n $ (Data.List.map (getRandomAlternative s) $ randomGenerators g)
 
 outputNicely (d,t) = "\n--------------------------\nBest current solution:\nDistance: " ++ (show d) ++ "\nTree: " ++ (show t)
