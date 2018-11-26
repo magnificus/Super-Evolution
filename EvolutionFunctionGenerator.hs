@@ -1,17 +1,17 @@
 output = "input.txt"
 
 func3 (x, y, z) = 2**x +z
-func2 (x,y) = x+y**(2.5)
+func2 (x,y) = x + y**(13.5)
 func1 :: Double -> Double
 func1 x = x**x + 4.0
 
-numsPrint = 6.0
+numsPrint = 3
 
 valNames2 = ("x", "y")
 valNames3 = ("x", "y", "z")
 valNames1 = "x"
 
-input = [1.0..numsPrint]
+input = take numsPrint [1.0,5.0..]
 vars2 = [(i,j) | i <- input, j <- input]
 vars3 = [(i,j,k) | i <- input, j <- input, k <- input]
 

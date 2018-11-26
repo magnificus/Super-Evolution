@@ -27,11 +27,10 @@ getFunction f = getPositionInList f availableFunctions
 
 getMutatedChildren (c1,c2) r = (maybeChangeTU c1 (r !! 0) (r !! 1), maybeChangeTU c2 (r !! 2) (r !! 3))
 
-
 maybeChangeTU c f1 f2 = if (f1 < mutateChildChance) then getPositionInList f2 availableTU else c
 
 getMutatedLeafProperty s r (Var a) = if (r !! 0) < changeVariableChance then (Var (getPositionInList (r !! 1) s)) else (Var a)
-getMutatedLeafProperty s r (Lit a) = if (r !! 0) < changeNumberChance then (Lit (a * (lerp changeNumberRange (r !! 1))**4)) else (Lit a)
+getMutatedLeafProperty s r (Lit a) = if (r !! 0) < changeNumberChance then (Lit (a * (lerp changeNumberRange (r !! 1)))) else (Lit a)
 
 getMutatedLeaf s l r = if ((r !! 0) < mutateLeafChance) then getLeaf s (tail r) else getMutatedLeafProperty s (tail r) l
 
