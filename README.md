@@ -59,7 +59,7 @@ returns 1 + x^y in a few seconds.
 
 ## Problems
 
-Overfitting, though doesn't seem to be as big of an issue as anticipated. The maximum tree depth essentially blocks the equations from becoming too complex.
+Overfitting doesn't seem to be as big of an issue as anticipated. The maximum tree depth blocks the equations from becoming too complex.
 
 The program has a harder time finding combinations of very large static numbers and small polynomial factors.
 
