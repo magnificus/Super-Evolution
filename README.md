@@ -22,7 +22,7 @@ these properties are mutated and crossbred with each other to create new generat
 
 To generate an AST tree from these you'll need a treedepth Integer, default is 4.
 
-The first node in the list is called first, it will run its function on the result of the calculation of the translation units on the indices of the pair childrenNodes. These nodes will call their own children and run their function on them. etc. When treedeapth is reached the translation unit returns a leaf instead of a function (a leaf can be either a variable or an static value).
+The algorithm starts with selecting one of these trainslation units, the translation unit will run its function on the result of the calculation of the translation units on the indices of the pair childrenNodes. These nodes will call their own children and run their function on them. etc. When treedeapth is reached the translation unit returns a leaf instead of a function (a leaf can be either a variable or an static value). You see that this way an array of translation units can be turned into an AST.
 
 ## Using the program
 
@@ -57,10 +57,10 @@ x = 4, y = 3, res = 65
 
 returns 1 + x^y in a few seconds.
 
-TODO more results
-
 ## Problems
 
 Overfitting, though doesn't seem to be as big of an issue as anticipated. The maximum tree depth essentially blocks the equations from becoming too complex.
 
 The program has a harder time finding combinations of very large static numbers and small polynomial factors.
+
+It can be slow, should get around to rewriting this thing in some faster language when I find the time.
