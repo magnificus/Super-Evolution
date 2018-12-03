@@ -1,11 +1,11 @@
 output = "input.txt"
 
-func3 (x, y, z) = 2**x +z
-func2 (x,y) = x + y**(13.5)
+func3 (x, y, z) = x**1.25 + 0.7*y - z
+func2 (x,y) = x + y**(5.5)
 func1 :: Double -> Double
-func1 x = x**x + 4.0
+func1 x = x**2 + x**x - 1
 
-numsPrint = 3
+numsPrint = 5
 
 valNames2 = ("x", "y")
 valNames3 = ("x", "y", "z")
@@ -41,7 +41,7 @@ output3 = mergeIntoLists inputCombined results
           results = [("res", r) | r <- map func3 vars3]
 
 main = do
-    let outputList = output2
+    let outputList = output3
     let outputFormatted = formatLines $ map formatLine $ map (map formatItem) outputList
     writeFile output outputFormatted
     return outputFormatted
