@@ -1,8 +1,12 @@
-#include<string>
+#include <string>
 #include <stdlib.h>     
 #include <time.h>      
+#include <cmath>
 
 #pragma once
+
+
+int TreeDepth = 2;
 
 
 enum Function {Add,Sub,Mul, FUN_END};
@@ -13,7 +17,7 @@ enum Leaf {Num,Var, LEAF_END};
 struct Solution{
 	std::map<std::string, double> InputValues;
 	double Result;
-}
+};
 
 double fRand(double fMin, double fMax)
 {
@@ -34,8 +38,26 @@ struct TranslationUnit{
 	std::string LeafS;
 
 
+	const double GetValue(int Remaining,std::map<std::string, double> &Values,std::vector<TranslationUnit> &TranslationUnits) {
+		if (Remaining == 0)
+			return GetLeafValue(Values);
+
+		double Val1 = TranslationUnits[ChildL].GetValue(Remaining-1, Values, TranslationUnits);
+		double Val2 = TranslationUnits[ChildR].GetValue(Remaining-1, Values, TranslationUnits);
+
+		switch (FunctionType){
+			case Add: return Val1 + Val2;
+			case Sub: return Val1 - Val2;
+			case Mul: return Val1 * Val2;
+		}
+
+		return -100000;
+	}
+
+
+
 	// mostly for debugging
-	std::string GetTree (int Remaining, std::vector<TranslationUnit> &TranslationUnits) {
+	const std::string GetTree (int Remaining, std::vector<TranslationUnit> &TranslationUnits) {
 		if (Remaining == 0){
 			switch (LeafType) {
 				case Num: return std::to_string(LeafVal);
@@ -59,32 +81,19 @@ struct TranslationUnit{
 		}
 	}
 
-	double GetValue(int Remaining,std::map<std::string, double> &Values,std::vector<TranslationUnit> &TranslationUnits) {
-		if (Remaining == 0)
-			return GetLeafValue(Values);
 
-		double Val1 = TranslationUnits[ChildL].GetValue(Remaining-1, Values, TranslationUnits);
-		double Val2 = TranslationUnits[ChildR].GetValue(Remaining-1, Values, TranslationUnits);
 
-		switch (FunctionType){
-			case Add: return Val1 + Val2;
-			case Sub: return Val1 - Val2;
-			case Mul: return Val1 * Val2;
-		}
-
-		return 0.0f;
-	}
-
-	double GetLeafValue(std::map<std::string, double> &Values){
+	const double GetLeafValue(std::map<std::string, double> &Values){
 		switch (LeafType){
 			case Num: return LeafVal;
 			case Var: return Values[LeafS];
 		}
-		return 0.0f;
+		return -10000;
 	}
 
 
 	static TranslationUnit GetRandomTranslationUnit(const std::vector<std::string> &Values, int NumTranslationUnits){
+
 
 		int NewChildL = rand() % NumTranslationUnits;
 		int NewChildR = rand() % NumTranslationUnits;
@@ -100,7 +109,43 @@ struct TranslationUnit{
 
 	}
 
+
+
 };
 
+struct Alternative{
+	std::vector<TranslationUnit> TranslationUnits;
+	int StartIndex = 0;
+	double Fitness = -1.0;
+
+	Alternative(std::vector<std::string> &ValueStrings, int NumUnits){
+		for (int i = 0; i < NumUnits; i++)
+			TranslationUnits.push_back(TranslationUnit::GetRandomTranslationUnit(ValueStrings, NumUnits));
+	}
+
+
+	const double GetValue(std::map<std::string, double> &Values){
+		return TranslationUnits[StartIndex].GetValue(TreeDepth, Values, TranslationUnits);
+	}
+
+
+	double GetFitnessForSolution(Solution &InputSol){
+		double MyResult = GetValue(InputSol.InputValues);
+		return pow(abs(MyResult - InputSol.Result), 2.0);
+	}
+
+	double GetFitnessForSolutions(std::vector<Solution> &Solutions){
+	
+		double Total = 0.0;
+		for (Solution &S : Solutions)
+			Total += GetFitnessForSolution(S);
+
+		return Total;
+	}
+
+	std::string GetTree(){
+		return TranslationUnits[StartIndex].GetTree(TreeDepth, TranslationUnits);
+	}
+};
 
 
