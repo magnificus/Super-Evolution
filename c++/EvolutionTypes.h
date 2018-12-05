@@ -6,10 +6,16 @@
 #pragma once
 
 
-int TreeDepth = 2;
+int TreeDepth = 3;
+
+float MutateChildrenFactor = 0.02;
+float MutateFunctionFactor = 0.02;
+float MutateLeafFactor = 0.02;
+float MutateLeafValFactor = 0.05;
+float MutateLeafSFactor = 0.02;
 
 
-enum Function {Add,Sub,Mul, FUN_END};
+enum Function {Add,Sub,Mul, Div, Pow, FUN_END};
 enum Leaf {Num,Var, LEAF_END};
 
 
@@ -18,6 +24,9 @@ struct Solution{
 	std::map<std::string, double> InputValues;
 	double Result;
 };
+
+
+#define FRAND fRand(0.0, 1.0)
 
 double fRand(double fMin, double fMax)
 {
@@ -49,6 +58,8 @@ struct TranslationUnit{
 			case Add: return Val1 + Val2;
 			case Sub: return Val1 - Val2;
 			case Mul: return Val1 * Val2;
+			case Div: return Val1 / Val2;
+			case Pow: return pow(Val1,Val2);
 		}
 
 		return -100000;
@@ -74,6 +85,8 @@ struct TranslationUnit{
 				case Add: FuncS = "+"; break;
 				case Sub: FuncS = "-"; break;
 				case Mul: FuncS = "*"; break;
+				case Div: FuncS = "/"; break;
+				case Pow: FuncS = "^"; break;
 				default: FuncS = "INVALID"; break;
 			}
 			return "(" + String1 + " " + FuncS + " " + String2 + ")";
@@ -88,12 +101,11 @@ struct TranslationUnit{
 			case Num: return LeafVal;
 			case Var: return Values[LeafS];
 		}
-		return -10000;
+		return -10000000;
 	}
 
 
 	static TranslationUnit GetRandomTranslationUnit(const std::vector<std::string> &Values, int NumTranslationUnits){
-
 
 		int NewChildL = rand() % NumTranslationUnits;
 		int NewChildR = rand() % NumTranslationUnits;
@@ -110,6 +122,34 @@ struct TranslationUnit{
 	}
 
 
+	void Mutate(std::vector<std::string> &ValueStrings, int NumTranslationUnits){
+		if (FRAND < MutateChildrenFactor)
+			ChildL = rand() % NumTranslationUnits;
+
+		if (FRAND < MutateChildrenFactor)
+			ChildR = rand() % NumTranslationUnits;
+
+		if (FRAND < MutateFunctionFactor)
+			FunctionType = static_cast<Function>(rand() % FUN_END);
+
+		if (FRAND < MutateLeafFactor)
+			LeafType = static_cast<Leaf>(rand() % LEAF_END);
+
+		if (FRAND < MutateLeafValFactor)
+			LeafVal = fRand(-1.0,1.0);
+
+		if (FRAND < MutateLeafSFactor)
+			LeafS = ValueStrings[rand() % ValueStrings.size()];
+
+
+
+	//float MutateChildrenFactor = 0.02;
+	//float MutateFunctionFactor = 0.02;
+	//float MutateLeafFactor = 0.02;
+	//float MutateLeafValFactor = 0.05;
+	//float MutateLeafSFactor = 0.02;
+
+	}
 
 };
 
@@ -139,8 +179,13 @@ struct Alternative{
 		double Total = 0.0;
 		for (Solution &S : Solutions)
 			Total += GetFitnessForSolution(S);
-
 		return Total;
+	}
+
+	void Mutate(std::vector<std::string> &ValueStrings){
+		for (TranslationUnit &T : TranslationUnits){
+			T.Mutate(ValueStrings, TranslationUnits.size());
+		}
 	}
 
 	std::string GetTree(){
