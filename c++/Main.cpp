@@ -8,17 +8,45 @@
 int NumTranslationUnits = 200;
 int NumAlternatives = 10000;
 
-float CullRatio = 0.15;
+float KeepRatio = 0.9;
+
+std::vector<Solution> GetCustomSolutions(){
+
+
+	// edit these, but keep the number of entries the same in each array
+	const double XVals[] = {1.0,2.0,3};
+	const double YVals[] = {0.0,0.0, 0.0, 0.0, 0.0, 0.0};
+	const double ResultVals[] = {1,1024,59049};
+
+	std::vector<Solution> ToReturn;
+	// only x
+	for (int i = 0; i < sizeof(XVals)/sizeof(XVals[0]); i++){
+		std::map<std::string, double> Current = {std::make_pair("x", XVals[i])};
+		ToReturn.push_back(Solution{Current, ResultVals[i]});
+	}
+	// assume same length of arrays cause otherwise we don't know anything
+	//for (int i = 0; i < sizeof(XVals)/sizeof(XVals[0]); i++){
+	//	std::map<std::string, double> Current = {std::make_pair("x", XVals[i]), std::make_pair("y", YVals[i])};
+	//	ToReturn.push_back(Solution{Current, ResultVals[i]});
+	//}
+
+	return ToReturn;
+
+
+}
+
 
 void NextGeneration(std::vector<Alternative> &Alternatives, std::vector<Solution> &Solutions, std::vector<std::string> &ValueStrings){
+
+	#pragma omp parallel for
 	for (int i = 0; i < Alternatives.size(); i++){
-		bool ShouldCull = CullRatio*(float(i) / Alternatives.size()) > fRand(0.0, 2.0);
+		bool ShouldCull = KeepRatio < FRAND*2.0*(float(i) / Alternatives.size());
 		if (ShouldCull){
 			int Parent1 = rand() % Alternatives.size();
 			int Parent2 = rand() % Alternatives.size();
 
-			Alternatives[i] = Alternatives[Parent1];
-			//Alternatives[i] = Alternative::GetChild(Alternatives[Parent1], Alternatives[Parent2]);
+			//Alternatives[i] = Alternatives[Parent1];
+			Alternatives[i] = Alternative::GetChild(Alternatives[Parent1], Alternatives[Parent2]);
 			Alternatives[i].Mutate(ValueStrings);
 			Alternatives[i].Fitness = Alternatives[i].GetFitnessForSolutions(Solutions);
 		}
@@ -33,24 +61,32 @@ int main(){
 
 
 	double MinInputValue = 0.0;
-	double MaxInputValue = 100.0;
+	double MaxInputValue = 10.0;
 
 	// only x
-	for (double x = MinInputValue; x < MaxInputValue; x++){
-		std::map<std::string, double> ValuesMap = {std::make_pair("x", x)};
-		Solutions.push_back(Solution{ValuesMap, pow(x,2.1) + 63.9});
-	}
+	//for (double x = MinInputValue; x < MaxInputValue; x++){
+	//	std::map<std::string, double> ValuesMap = {std::make_pair("x", x)};
+	//	Solutions.push_back(Solution{ValuesMap, pow(x,2.1) + 63.9});
+	//}
 
 	// x and y
-//	for (double x = MinInputValue; x < MaxInputValue; x++){
-		//for (double y = MinInputValue; y < MaxInputValue; y++){
-			//std::map<std::string, double> ValuesMap = {std::make_pair("x", x), std::make_pair("y", y)};
-			//Solutions.push_back(Solution{ValuesMap, pow(x,2.1) + 63.9 - 5*y});
-		//}
-	//}
+	for (double x = MinInputValue; x < MaxInputValue; x++){
+		for (double y = MinInputValue; y < MaxInputValue; y++){
+			std::map<std::string, double> ValuesMap = {std::make_pair("x", x), std::make_pair("y", y)};
+			Solutions.push_back(Solution{ValuesMap, 3*pow(x,2) - 5*y + 2});
+		}
+	}
+	//
+	//Solutions = GetCustomSolutions();
 	
 
-	std::vector<std::string> ValueStrings = {"x"};
+	std::vector<std::string> ValueStrings;
+	if (Solutions.size() > 0){
+		for (auto pair : Solutions[0].InputValues){
+			ValueStrings.push_back(std::get<0>(pair));
+		}
+	}
+
 	std::vector<Alternative> Alternatives;
 
 	for (int i = 0; i < NumAlternatives; i++)

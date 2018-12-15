@@ -8,14 +8,16 @@
 
 int TreeDepth = 3;
 
-float MutateChildrenFactor = 0.02;
-float MutateFunctionFactor = 0.02;
-float MutateLeafFactor = 0.02;
-float MutateLeafValFactor = 0.02;
-float MutateLeafValFactorMultiply = 0.07;
-float MutateLeafSFactor = 0.02;
+const float GlobalMutateFactor = 1.0;
 
-float MutateStartIndexFactor = 0.02;
+const float MutateChildrenFactor = GlobalMutateFactor * 0.02;
+const float MutateFunctionFactor = GlobalMutateFactor * 0.02;
+const float MutateLeafFactor = GlobalMutateFactor * 0.02;
+const float MutateLeafValFactor = GlobalMutateFactor * 0.02;
+const float MutateLeafValFactorMultiply = GlobalMutateFactor * 0.07;
+const float MutateLeafSFactor = GlobalMutateFactor * 0.02;
+
+const float MutateStartIndexFactor = GlobalMutateFactor * 0.02;
 
 
 enum Function {Add,Sub,Mul, Div, Pow, LeftOnly, RightOnly, FUN_END};
@@ -74,7 +76,7 @@ struct TranslationUnit{
 		if (Remaining == 0){
 			switch (LeafType) {
 				case Num: return std::to_string(LeafVal);
-				case Var: return LeafS;
+				case Var: return std::to_string(LeafVal) + LeafS;
 			}
 			return "INVALID";
 		} else {
@@ -101,7 +103,7 @@ struct TranslationUnit{
 	const double GetLeafValue(std::map<std::string, double> &Values){
 		switch (LeafType){
 			case Num: return LeafVal;
-			case Var: return Values[LeafS];
+			case Var: return Values[LeafS]*LeafVal;
 		}
 		return -10000000;
 	}
@@ -138,7 +140,7 @@ struct TranslationUnit{
 			LeafVal = fRand(-1.0,1.0);
 
 		if (FRAND < MutateLeafValFactorMultiply)
-			LeafVal *= pow(fRand(0.5,1.5), 4);
+			LeafVal *= pow(fRand(0.5,1.5), 6);
 
 		if (FRAND < MutateLeafSFactor)
 			LeafS = ValueStrings[rand() % ValueStrings.size()];
@@ -166,12 +168,12 @@ struct Alternative{
 	}
 
 
-	double GetFitnessForSolution(Solution &InputSol){
+	const double GetFitnessForSolution(Solution &InputSol){
 		double MyResult = GetValue(InputSol.InputValues);
 		return pow(abs(MyResult - InputSol.Result), 2.0);
 	}
 
-	double GetFitnessForSolutions(std::vector<Solution> &Solutions){
+	const double GetFitnessForSolutions(std::vector<Solution> &Solutions){
 	
 		double Total = 0.0;
 		for (Solution &S : Solutions)

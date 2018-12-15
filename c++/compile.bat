@@ -1,1 +1,0 @@
-cl /EHsc Main.cpp
