@@ -6,32 +6,31 @@
 #include "EvolutionTypes.h"
 
 int NumTranslationUnits = 200;
-int NumAlternatives = 10000;
+int NumAlternatives = 1000;
 
-float KeepRatio = 0.9;
+float KeepRatio = 0.85;
 
 std::vector<Solution> GetCustomSolutions(){
 
 
 	// edit these, but keep the number of entries the same in each array
-	const double XVals[] = {1.0,2.0,3};
-	const double YVals[] = {0.0,0.0, 0.0, 0.0, 0.0, 0.0};
-	const double ResultVals[] = {1,1024,59049};
+	double XVals[] = {1.0,2.0,3.0, 4.0};
+	double YVals[] = {2.0,4.0, 6.0, 0.0};
+	double ResultVals[] = {1+4,2+8,3+12,4};
 
 	std::vector<Solution> ToReturn;
 	// only x
-	for (int i = 0; i < sizeof(XVals)/sizeof(XVals[0]); i++){
-		std::map<std::string, double> Current = {std::make_pair("x", XVals[i])};
-		ToReturn.push_back(Solution{Current, ResultVals[i]});
-	}
-	// assume same length of arrays cause otherwise we don't know anything
 	//for (int i = 0; i < sizeof(XVals)/sizeof(XVals[0]); i++){
-	//	std::map<std::string, double> Current = {std::make_pair("x", XVals[i]), std::make_pair("y", YVals[i])};
+	//	std::map<std::string, double> Current = {std::make_pair("x", XVals[i])};
 	//	ToReturn.push_back(Solution{Current, ResultVals[i]});
 	//}
+	// x and y assume same length of arrays 
+	for (int i = 0; i < sizeof(XVals)/sizeof(XVals[0]); i++){
+		std::map<std::string, double> Current = {std::make_pair("x", XVals[i]), std::make_pair("y", YVals[i])};
+		ToReturn.push_back(Solution{Current, ResultVals[i]});
+	}
 
 	return ToReturn;
-
 
 }
 
@@ -61,23 +60,23 @@ int main(){
 
 
 	double MinInputValue = 0.0;
-	double MaxInputValue = 10.0;
+	double MaxInputValue = 12.0;
 
 	// only x
 	//for (double x = MinInputValue; x < MaxInputValue; x++){
 	//	std::map<std::string, double> ValuesMap = {std::make_pair("x", x)};
-	//	Solutions.push_back(Solution{ValuesMap, pow(x,2.1) + 63.9});
+	//	Solutions.push_back(Solution{ValuesMap, pow(x,2.1) });
 	//}
 
 	// x and y
-	for (double x = MinInputValue; x < MaxInputValue; x++){
-		for (double y = MinInputValue; y < MaxInputValue; y++){
-			std::map<std::string, double> ValuesMap = {std::make_pair("x", x), std::make_pair("y", y)};
-			Solutions.push_back(Solution{ValuesMap, 3*pow(x,2) - 5*y + 2});
-		}
-	}
-	//
-	//Solutions = GetCustomSolutions();
+	//for (double x = MinInputValue; x < MaxInputValue; x++){
+	//	for (double y = MinInputValue; y < MaxInputValue; y++){
+	//		std::map<std::string, double> ValuesMap = {std::make_pair("x", x), std::make_pair("y", y)};
+	//		Solutions.push_back(Solution{ValuesMap, x+y-2);
+	//	}
+	//}
+	
+	Solutions = GetCustomSolutions();
 	
 
 	std::vector<std::string> ValueStrings;
@@ -107,6 +106,7 @@ int main(){
 		std::cout << "Fitness: " << Alternatives[0].GetFitnessForSolutions(Solutions) << std::endl;
 		NextGeneration(Alternatives, Solutions, ValueStrings);
 
+		// sort by fitness
 		std::sort(Alternatives.begin(), Alternatives.end(), [](const Alternative &T1,const Alternative &T2) { return T1.Fitness < T2.Fitness; });
 	}
 	return 0;

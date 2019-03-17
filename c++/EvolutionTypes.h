@@ -8,7 +8,7 @@
 
 int TreeDepth = 3;
 
-const float GlobalMutateFactor = 1.0;
+const float GlobalMutateFactor = 2;
 
 const float MutateChildrenFactor = GlobalMutateFactor * 0.02;
 const float MutateFunctionFactor = GlobalMutateFactor * 0.02;
@@ -76,7 +76,7 @@ struct TranslationUnit{
 		if (Remaining == 0){
 			switch (LeafType) {
 				case Num: return std::to_string(LeafVal);
-				case Var: return std::to_string(LeafVal) + LeafS;
+				case Var: return /*std::to_string(LeafVal) + */LeafS;
 			}
 			return "INVALID";
 		} else {
@@ -103,7 +103,7 @@ struct TranslationUnit{
 	const double GetLeafValue(std::map<std::string, double> &Values){
 		switch (LeafType){
 			case Num: return LeafVal;
-			case Var: return Values[LeafS]*LeafVal;
+			case Var: return Values[LeafS]/**LeafVal*/;
 		}
 		return -10000000;
 	}
@@ -140,7 +140,7 @@ struct TranslationUnit{
 			LeafVal = fRand(-1.0,1.0);
 
 		if (FRAND < MutateLeafValFactorMultiply)
-			LeafVal *= pow(fRand(0.5,1.5), 6);
+			LeafVal *= pow(fRand(0.65,1.5), 10);
 
 		if (FRAND < MutateLeafSFactor)
 			LeafS = ValueStrings[rand() % ValueStrings.size()];
